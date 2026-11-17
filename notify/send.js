@@ -66,10 +66,11 @@ function nowParts() {
   const fmt = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Shanghai',
     year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   });
   const o = {};
   for (const p of fmt.formatToParts(new Date())) o[p.type] = p.value;
+  if (o.hour === '24') o.hour = '00';   // 有些环境午夜会返回 24
   return {
     date: o.year + '-' + o.month + '-' + o.day,
     hm: o.hour + ':' + o.minute,
