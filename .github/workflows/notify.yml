@@ -2,7 +2,6 @@ name: proactive-notify
 
 on:
   schedule:
-    # 每 30 分钟检查一次（GitHub 的 cron 用 UTC，脚本内部按北京时间算）
     - cron: '*/30 * * * *'
   workflow_dispatch:
 
@@ -16,6 +15,7 @@ concurrency:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: Checkout
         uses: actions/checkout@v4
