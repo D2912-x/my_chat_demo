@@ -1,0 +1,7 @@
+{
+  "windowStart": "09:00",
+  "windowEnd": "23:00",
+  "minPerDay": 0,
+  "maxPerDay": 5,
+  "maxMessages": 50
+}
