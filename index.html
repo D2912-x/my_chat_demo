@@ -8,36 +8,62 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AI">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="shortcut icon" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>My Chat</title>
     <style>
+        /* ============================================================
+           样式目录：（Ctrl+F 搜【Cxx】直接跳）
+           【C01】主题变量（改颜色/圆角/字号先来这里）
+           【C02】侧边栏
+           【C03】主界面
+           【C04】消息区 (宽度优化)
+           【C05】折叠面板
+           【C06】大输入框 UI (DeepSeek 风格)
+           【C07】Markdown 渲染样式
+           【C08】Prism 代码高亮配色（未加载主题 CSS，避免覆盖气泡样式）
+           【C09】记忆开关与记忆管理按钮
+           【C10】设置中心
+           【C11】锁屏
+           【C12】时间分隔 + 长按菜单 + 轻提示
+           【C13】附件托盘
+           【C14】弹窗样式
+           【C15】弹窗层级（z-index）
+           【C16】侧边栏菜单的单选项排版
+           【C17】响应式
+           【C18】桌面端布局（满屏无留白）
+           ============================================================ */
+
+        /* 【C01】主题变量（改颜色/圆角/字号先来这里） */
+
         :root {
             /* ===== 主题：只改这一块就能换整体风格 ===== */
-            --bg-base:       #f9efdf;   /* 页面底色 */
-            --bg-dot:        #f3d7f6;   /* 背景点阵颜色 */
+            --bg-base:       #f9f9f9;   /* 页面底色 */
+            --bg-dot:        #c9d6f8;   /* 背景点阵颜色 */
             --panel-bg:      #ffffff;   /* 卡片、侧边栏 */
             --border:        #ece7e1;   /* 分隔线 */
             --text-main:     #33302c;   /* 主文字 */
             --text-sub:      #8a827a;   /* 次要文字 */
 
-            --accent:        #9b7bb0;   /* 强调色：按钮底色、链接 */
-            --accent-soft:   #f3ebf6;   /* 强调色浅底 */
-            --primary:       #f3ebf6;   /* 兼容旧变量 */
-            --primary-text:  #3a2f3d;
+            --accent:        #8b8b8b;   /* 强调色：按钮底色、链接 */
+            --accent-soft:   #efefef;   /* 强调色浅底 */
+            --primary:       #6f6f6f;   /* 兼容旧变量 */
+            --primary-text:  #ffffff;
 
             /* ===== 聊天气泡：想改气泡就改这几行 ===== */
-            --bubble-radius: 18px;      /* 圆角，方一点改 10px */
-            --bubble-gap:    12px;      /* 消息间距 */
-            --bubble-max:    92%;       /* 气泡最大宽度 */
-            --bubble-pad:    12px 16px; /* 内边距 */
-            --bubble-font:   15px;      /* 字号 */
-            --bubble-line:   1.7;       /* 行距 */
-            --bubble-me-bg:  #f3ebf6;   /* 你的气泡底色 */
-            --bubble-me-fg:  #3a2f3d;   /* 你的气泡文字 */
-            --bubble-ai-bg:  #ffffff;   /* AI 气泡底色 */
-            --bubble-ai-bd:  #ece7e1;   /* AI 气泡边框 */
-            --bubble-shadow: 0 1px 6px rgba(60,50,40,0.05);
+            --bubble-radius: 24px;      /* 圆角，想方一点改 14px */
+            --bubble-gap:    14px;      /* 消息间距 */
+            --bubble-max:    88%;       /* 气泡最大宽度 */
+            --bubble-pad:    14px 18px; /* 内边距 */
+            --bubble-font:   16px;      /* 字号 */
+            --bubble-line:   1.65;      /* 行距 */
+            --bubble-me-bg:  rgba(255, 255, 255, 0.81); /* 你的气泡：淡粉半透明 */
+            --bubble-me-fg:  #4a3b40;                /* 你的气泡文字 */
+            --bubble-ai-bg:  rgba(255, 255, 255, 0.86); /* AI 气泡：冷灰半透明 */
+            --bubble-ai-bd:  rgba(255,255,255,0.6);  /* 细白边 */
+            --bubble-shadow: 0 2px 10px rgba(60,50,40,0.05);
 
             --sidebar-width: 264px;
         }
@@ -53,7 +79,7 @@
 
         #layout { display: flex; height: 100dvh; width: 100vw; overflow: hidden; }
 
-        /* 侧边栏 */
+        /* 【C02】侧边栏 */
         #sidebar {
             width: var(--sidebar-width); background: var(--panel-bg); z-index: 100;
             display: flex; flex-direction: column; border-right: 1px solid var(--border);
@@ -83,7 +109,7 @@
         .session-item .name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .session-item .more-btn { flex: 0 0 auto; background: none; border: none; color: #999; padding: 4px 10px; font-size: 18px; line-height: 1; cursor: pointer; }
 
-        /* 主界面 */
+        /* 【C03】主界面 */
         #main {
             flex: 1; display: flex; flex-direction: column;
             background: rgba(255,255,255,0.4); position: relative; overflow: hidden;
@@ -97,9 +123,9 @@
         #menu-btn { display: none; }
         #title { flex: 1; font-weight: 600; text-align: center; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* 消息区 (宽度优化) */
+        /* 【C04】消息区 (宽度优化) */
         #msgs { flex: 1; overflow-y: auto; padding: 18px 18px 8px; display: flex; flex-direction: column; }
-        .msg-wrap { display: flex; width: 100%; margin: var(--bubble-gap) 0; align-items: center; }
+        .msg-wrap { display: flex; width: 100%; margin: var(--bubble-gap) 0; align-items: flex-end; }
         .msg-wrap.me { justify-content: flex-end; }
         .msg-wrap.ai { justify-content: flex-start; }
         .msg {
@@ -110,8 +136,8 @@
             box-shadow: var(--bubble-shadow);
         }
         /* 修改点 1：去掉 cursor: pointer，气泡本体不再是"可点击"暗示 */
-        .me .msg { background: var(--bubble-me-bg); color: var(--bubble-me-fg); border-bottom-right-radius: 6px; }
-        .ai .msg { background: var(--bubble-ai-bg); color: var(--text-main); border-bottom-left-radius: 6px; border: 1px solid var(--bubble-ai-bd); }
+        .me .msg { background: var(--bubble-me-bg); color: var(--bubble-me-fg); border: 1px solid rgba(255,255,255,0.6); border-bottom-right-radius: 8px; }
+        .ai .msg { background: var(--bubble-ai-bg); color: var(--text-main); border: 1px solid rgba(255,255,255,0.6); border-bottom-left-radius: 8px; }
 
         .edit-btn {
             background: transparent; border: none; font-size: 16px; cursor: pointer;
@@ -119,7 +145,7 @@
         }
         .chat-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; }
 
-        /* 折叠面板 */
+        /* 【C05】折叠面板 */
         .reasoning-wrapper {
             background: #f9f9f9; border-radius: 8px; margin-bottom: 8px;
             border-left: 3px solid #ccc; overflow: hidden;
@@ -135,12 +161,13 @@
             white-space: pre-wrap; display: none;
         }
 
-        /* 大输入框 UI (DeepSeek 风格) */
+        /* 【C06】大输入框 UI (DeepSeek 风格) */
         #bar {
             padding: 8px 12px;
             padding-bottom: calc(8px + env(safe-area-inset-bottom));
-            background: var(--bg-base);
-            border-top: 1px solid transparent; 
+            /* 透明：让页面点阵背景透过来，避免输入区出现一条实色米黄带 */
+            background: transparent;
+            border-top: none;
         }
         .input-container {
             background: #ffffff; border-radius: 24px;
@@ -189,7 +216,7 @@
         }
         #undoEditBar button:active { transform: scale(0.96); }
 
-        /* ---------- Markdown 渲染样式 ---------- */
+        /* 【C07】Markdown 渲染样式 */
         .msg.md-body { white-space: normal; }
         .md-body > *:first-child { margin-top: 0; }
         .md-body > *:last-child { margin-bottom: 0; }
@@ -214,7 +241,7 @@
         .md-body th, .md-body td { border: 1px solid #e5e5e5; padding: 6px 8px; }
         .md-body th { background: #f7f7f7; font-weight: 600; white-space: nowrap; }
         .md-body tbody tr:nth-child(even) td { background: #fcfcfc; }
-        /* Prism 代码高亮配色（未加载主题 CSS，避免覆盖气泡样式） */
+        /* 【C08】Prism 代码高亮配色（未加载主题 CSS，避免覆盖气泡样式） */
         .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #6e7781; }
         .token.punctuation { color: #57606a; }
         .token.property, .token.tag, .token.constant, .token.symbol, .token.deleted { color: #cf222e; }
@@ -222,19 +249,27 @@
         .token.selector, .token.attr-name, .token.string, .token.char, .token.builtin, .token.inserted { color: #6f7d5a; }
         .token.operator, .token.entity, .token.url { color: #8a6a52; }
         .token.atrule, .token.attr-value, .token.keyword { color: #cf222e; }
-        .token.function, .token.class-name { color: #bfa3f1; }
+        .token.function, .token.class-name { color: #e4fdfe; }
         .token.regex, .token.important, .token.variable { color: #953800; }
         .md-body pre[class*="language-"] { background: #f6f8fa; }
-        /* 记忆开关与记忆管理按钮 */
-        #memBtn { background: #f2f7f2; color: #7c8dcf; border: none; border-radius: 16px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
-        #memBtn.active { background: #7c8dcf; color: #ffffff; }
+        /* 【C09】记忆开关与记忆管理按钮 */
+        #memBtn { background: #f2f7f2; color: #adb0bc; border: none; border-radius: 16px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
+        #memBtn.active { background: #adb0bc; color: #ffffff; }
         #memBtn:not(.active) { background: #f3f3f3; color: #999; }
         .mem-actions { display: flex; gap: 8px; margin-top: 10px; }
         .mem-btn { flex: 1; padding: 9px 0; font-size: 13px; border: 1px solid var(--border); background: #f7f7f7; border-radius: 8px; cursor: pointer; color: #333; font-family: inherit; }
         .mem-btn:active { background: #eeeeee; }
         .mem-btn:disabled { opacity: 0.55; cursor: default; }
-        /* 设置中心 */
-        .hub-card { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; cursor: pointer; background: #fafafa; }
+        /* 【C10】设置中心 */
+        .hub-card {
+            display: flex; align-items: center; gap: 14px; padding: 14px;
+            border: 1px solid rgba(255,255,255,0.75); border-radius: 16px; margin-bottom: 12px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 16px rgba(60,50,40,0.04);
+        }
         .hub-card:active { background: #f0f0f0; }
         .hub-icon { font-size: 22px; width: 30px; text-align: center; }
         .hub-text { flex: 1; }
@@ -246,22 +281,42 @@
         .back-btn { background: none; border: none; font-size: 20px; color: #666; cursor: pointer; padding: 0 4px; line-height: 1; }
         .panel-spacer { width: 24px; }
         .override-toggle { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: #555; font-size: 14px; cursor: pointer; }
-        /* 锁屏 */
-        #lockScreen { position: fixed; inset: 0; z-index: 900; background: var(--bg-base); display: none; align-items: center; justify-content: center; }
+        /* 【C11】锁屏 */
+        #lockScreen {
+            position: fixed; inset: 0; z-index: 900;
+            background-color: var(--bg-base);
+            background-image: radial-gradient(var(--bg-dot) 1.5px, transparent 1.5px);
+            background-size: 28px 28px;
+            display: none; align-items: center; justify-content: center;
+        }
+        @keyframes lockIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        #lockScreen[style*="flex"] .lock-box { animation: lockIn .4s cubic-bezier(.2,.8,.2,1) both; }
+        body.no-anim #lockScreen[style*="flex"] .lock-box { animation: none; }
         .lock-box { width: 100%; max-width: 320px; padding: 24px; text-align: center; }
+        .lock-hint { font-size: 12px; color: #a89f97; margin: 2px 0 10px; }
+        .lock-dots .dot.wrong { background: #e08585; border-color: #e08585; }
         .lock-icon { font-size: 34px; }
         .lock-title { font-size: 16px; font-weight: 600; margin: 10px 0 18px; color: var(--text-main); }
         .lock-dots { display: flex; gap: 12px; justify-content: center; height: 20px; margin-bottom: 22px; }
         .lock-dots .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #cfc6c0; background: transparent; }
         .lock-dots .dot.on { background: var(--accent); border-color: var(--accent); }
         .lock-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .lock-pad button { height: 58px; border-radius: 50%; border: 1px solid var(--border); background: #fff; font-size: 20px; color: var(--text-main); cursor: pointer; font-family: inherit; }
-        .lock-pad button:active { background: var(--accent-soft); }
+        .lock-pad button {
+            height: 56px; border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.95);
+            background: linear-gradient(180deg, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.52) 100%);
+            backdrop-filter: blur(14px) saturate(1.25);
+            -webkit-backdrop-filter: blur(14px) saturate(1.25);
+            box-shadow: 0 6px 18px rgba(120,100,80,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
+            font-size: 20px; color: var(--text-main); cursor: pointer; font-family: inherit;
+            transition: transform .12s ease, background .12s ease;
+        }
+        .lock-pad button:active { transform: scale(0.95); background: rgba(243,235,246,0.85); }
         .lock-pad button[disabled] { visibility: hidden; }
         .lock-remember { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 18px; font-size: 13px; color: var(--text-sub); }
         .lock-msg { color: #c25b5b; font-size: 13px; margin-top: 10px; min-height: 18px; }
         .lock-forgot { background: none; border: none; color: #b0a9a3; font-size: 12px; margin-top: 6px; text-decoration: underline; cursor: pointer; font-family: inherit; }
-        /* 时间分隔 + 长按菜单 + 轻提示 */
+        /* 【C12】时间分隔 + 长按菜单 + 轻提示 */
         .time-divider { text-align: center; color: #aaa; font-size: 12px; margin: 10px 0 2px; }
         .msg-menu { position: fixed; z-index: 500; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); padding: 6px; display: flex; flex-direction: column; min-width: 110px; }
         .msg-menu button { background: none; border: none; text-align: left; padding: 9px 12px; font-size: 14px; color: #333; border-radius: 6px; cursor: pointer; font-family: inherit; }
@@ -269,7 +324,61 @@
         .msg-menu button.danger { color: #e5484d; }
         #dshToast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(10px); background: rgba(0,0,0,0.78); color: #fff; font-size: 13px; padding: 8px 16px; border-radius: 18px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 600; }
         #dshToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        /* 附件托盘 */
+        /* 思考中 / 等待动画（三个点跳动） */
+        @keyframes typingBlink {
+            0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+            40%           { opacity: 1;   transform: translateY(-2px); }
+        }
+        .typing { display: inline-flex; gap: 4px; align-items: center; height: 18px; vertical-align: middle; }
+        .typing i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: typingBlink 1.2s infinite; }
+        .typing i:nth-child(2) { animation-delay: .15s; }
+        .typing i:nth-child(3) { animation-delay: .3s; }
+        .reasoning-header .typing { margin-left: 6px; color: #b0a9a3; }
+
+        /* 【C19】页面管理：头像 / 动效 */
+        .msg-wrap .avatar {
+            flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 600; color: #6b6767; background: #e6e2dd;
+            margin: 0 8px;
+        }
+        .msg-wrap .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        body.no-avatar .msg-wrap .avatar { display: none; }
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .msg-wrap.enter { animation: riseIn .30s cubic-bezier(.2,.8,.2,1) both; }
+        body.no-anim .msg-wrap.enter { animation: none; }
+
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: none; }
+        }
+        #main { animation: pageIn .35s cubic-bezier(.2,.8,.2,1) both; }
+        body.no-anim #main { animation: none; }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: translateY(8px) scale(.98); }
+            to   { opacity: 1; transform: none; }
+        }
+        .modal-content { animation: popUp .26s cubic-bezier(.2,.9,.3,1) both; }
+        body.no-anim .modal-content { animation: none; }
+
+        .switch-row { display: flex; align-items: center; gap: 8px; color: #555; font-size: 14px; cursor: pointer; }
+        .av-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .avatar-preview {
+            width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            background: #e6e2dd; color: #6b6767; font-weight: 600; font-size: 16px;
+        }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #uiModal input[type="color"] { width: 100%; height: 40px; padding: 4px; background: #f5f5f5; border: 1px solid var(--border); border-radius: 8px; }
+
+        .no-reason-hint { font-size: 12px; color: #b0a9a3; margin-top: 8px; }
+
+        /* 【C13】附件托盘 */
         .attach-tray { display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
         .attach-item { position: relative; display: flex; align-items: center; gap: 6px; background: #f5f5f5; border: 1px solid var(--border); border-radius: 10px; padding: 4px 6px; max-width: 100%; }
         .attach-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; display: block; }
@@ -278,17 +387,25 @@
         .file-chip { display: inline-block; margin-top: 8px; padding: 4px 10px; background: #f5f5f5; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: #555; }
         .reasoning-content.md-body { font-style: normal; }
 
-        /* 弹窗样式 */
-        #settings, #sessionSettingsModal, #myModal, #settingsHub, #notifyModal, #lockModal, #renameModal, #confirmModal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
-        /* 确认框和重命名框要盖在菜单(300)与锁屏(900)之上 */
+        /* 【C14】弹窗样式 */
+        #settings, #sessionSettingsModal, #myModal, #settingsHub, #notifyModal, #lockModal, #renameModal, #confirmModal, #uiModal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+        /* 【C15】弹窗层级（z-index） */
         #confirmModal, #renameModal { z-index: 950; }
-        .modal-content { background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+        .modal-content {
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(16px) saturate(1.2);
+            -webkit-backdrop-filter: blur(16px) saturate(1.2);
+            width: 100%; max-width: 400px; border-radius: 26px; padding: 20px;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 12px 40px rgba(60,50,40,0.10);
+            max-height: 90vh; overflow-y: auto;
+        }
         .modal-content h3 { margin: 0 0 16px; font-size: 18px; text-align: center; }
         .modal-content label { display: block; margin: 12px 0 4px; color: var(--text-sub); font-size: 13px; }
         /* 修复：原选择器把 radio 也当成文本输入框撑成了 100% 宽，导致文字被挤到最右并换行 */
         .modal-content input:not([type="radio"]):not([type="checkbox"]), .modal-content textarea { width: 100%; background: #f5f5f5; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font: inherit; outline: none; font-size: 15px; }
 
-        /* 侧边栏菜单的单选项排版 */
+        /* 【C16】侧边栏菜单的单选项排版 */
         #myModal label { padding: 10px 8px; border-radius: 10px; }
         #myModal label:active { background: #f7f7f7; }
         #myModal input[type="radio"] { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; padding: 0; background: none; border: none; accent-color: #4a8cff; }
@@ -298,7 +415,7 @@
         .btn-save { background: var(--primary); color: var(--primary-text); }
         .btn-cancel { background: #eee; color: #333; }
 
-        /* 响应式 */
+        /* 【C17】响应式 */
         @media (max-width: 767px) {
             #sidebar { position: fixed; top: 0; bottom: 0; left: 0; transform: translateX(-100%); }
             #sidebar.on { transform: translateX(0); }
@@ -309,7 +426,7 @@
         @media (min-width: 768px) {
             #sidebar { position: relative; transform: translateX(0) !important; }
             #overlay { display: none !important; }
-            /* 桌面端：内容区填满窗口（无最大宽度、无外层边距），彻底避免两侧留空 */
+            /* 【C18】桌面端布局（满屏无留白） */
             #main { flex: 1; margin: 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); box-shadow: 0 0 20px rgba(0,0,0,0.03); border-radius: 0; }
             .msg { max-width: 95%; }
         }
@@ -319,18 +436,19 @@
 
 <div id="lockScreen">
     <div class="lock-box">
-        <div class="lock-icon">🔒</div>
+        <div class="lock-icon">˙ᵕ˙</div>
         <div class="lock-title">输入密码</div>
+        <div id="lockHint" class="lock-hint"></div>
         <div id="lockDots" class="lock-dots"></div>
         <div class="lock-pad" id="lockPad">
             <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
             <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
             <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-            <button data-k="none" disabled></button><button data-k="0">0</button><button data-k="del">⌫</button>
+            <button data-k="none" disabled></button><button data-k="0">0</button><button data-k="del">×</button>
         </div>
         <label class="lock-remember"><input type="checkbox" id="lockRemember"> 本机 7 天免输</label>
         <div id="lockMsg" class="lock-msg"></div>
-        <button class="lock-forgot" onclick="resetAllData()">忘记密码</button>
+        <button class="lock-forgot" onclick="forgotLock()">忘记密码</button>
     </div>
 </div>
 
@@ -339,7 +457,7 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <span style="font-weight:bold;font-size:18px;">对话列表</span>
-            <button onclick="createSession()">+ 新建</button>
+            <button onclick="createSession()">+</button>
         </div>
         <div id="session-list"></div>
     </div>
@@ -348,7 +466,7 @@
         <div id="top">
             <button class="icon-btn" id="menu-btn" onclick="toggleSidebar()">☰</button>
             <div id="title">新对话</div>
-            <button class="icon-btn" onclick="openSettingsHub()">⚙️</button>
+            <button class="icon-btn" onclick="openSettingsHub()">❋</button>
         </div>
 
         <div id="msgs"></div>
@@ -359,7 +477,7 @@
             <div id="undoEditBar"><button onclick="undoEdit()">↩ 撤回刚才的修改</button></div>
             <div class="input-container">
                 <div id="attachTray" class="attach-tray"></div>
-                <textarea id="inp" rows="1" placeholder="给 DeepSeek 发送消息..."></textarea>
+                <textarea id="inp" rows="1" placeholder="请输入..."></textarea>
                 <div class="input-actions">
                     <div class="left-actions">
                         <input type="file" id="fileInput" style="display:none" accept="image/*, .txt, .md, .json, .csv, .py, .js, .html, .css">
@@ -367,7 +485,7 @@
                         <button id="memBtn" class="think-btn" onclick="toggleMemory()">记忆 开</button>
                     </div>
                     <div class="right-actions">
-                        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="上传文件">📎</button>
+                        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="上传文件">⌘</button>
                         <button id="send" onclick="handleSendClick()">↑</button>
                     </div>
                 </div>
@@ -383,7 +501,7 @@
     <div class="modal-content">
         <h3>设置</h3>
         <div class="hub-card" onclick="showSettingsPanel('chat')">
-            <div class="hub-icon">💬</div>
+            <div class="hub-icon">🗩</div>
             <div class="hub-text">
                 <div class="hub-title">对话设置</div>
                 <div class="hub-sub">人设 · 记忆 · 时间</div>
@@ -391,23 +509,31 @@
             <div class="hub-arrow">›</div>
         </div>
         <div class="hub-card" onclick="showSettingsPanel('api')">
-            <div class="hub-icon">🔌</div>
+            <div class="hub-icon">✎</div>
             <div class="hub-text">
-                <div class="hub-title">API 连接</div>
+                <div class="hub-title">模型设置</div>
                 <div class="hub-sub">地址 · 密钥 · 模型</div>
             </div>
             <div class="hub-arrow">›</div>
         </div>
         <div class="hub-card" onclick="showSettingsPanel('lock')">
-            <div class="hub-icon">🔒</div>
+            <div class="hub-icon">✧</div>
             <div class="hub-text">
                 <div class="hub-title">锁屏密码</div>
                 <div class="hub-sub">打开页面时先输密码</div>
             </div>
             <div class="hub-arrow">›</div>
         </div>
+        <div class="hub-card" onclick="showSettingsPanel('ui')">
+            <div class="hub-icon">☰</div>
+            <div class="hub-text">
+                <div class="hub-title">页面管理</div>
+                <div class="hub-sub">头像 · 气泡颜色 · 动效</div>
+            </div>
+            <div class="hub-arrow">›</div>
+        </div>
         <div class="hub-card" onclick="showSettingsPanel('notify')">
-            <div class="hub-icon">🔔</div>
+            <div class="hub-icon">☾</div>
             <div class="hub-text">
                 <div class="hub-title">主动消息</div>
                 <div class="hub-sub">密码 · 城市 · 拉取</div>
@@ -435,7 +561,50 @@
             <button type="button" class="mem-btn" onclick="enableLock()">启用 / 修改</button>
             <button type="button" class="mem-btn" onclick="disableLock()">关闭锁屏</button>
         </div>
-        <div style="font-size:12px; color:#aaa; margin-top:10px;">只挡住"随手打开页面"的人，<b>不会加密</b>本地数据。忘记密码只能清空数据重来。</div>
+        <div style="font-size:12px; color:#aaa; margin-top:10px;">只挡住"随手打开页面"的人，<b>不会加密</b>本地数据。忘记密码可在锁屏页点"忘记密码"解除（不清聊天）。</div>
+    </div>
+</div>
+
+<!-- 页面管理 -->
+<div id="uiModal">
+    <div class="modal-content">
+        <div class="panel-head">
+            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <h3>页面管理</h3>
+            <span class="panel-spacer"></span>
+        </div>
+
+        <label class="switch-row"><input type="checkbox" id="uiAvatarOn" onchange="saveUiSettings()"> 显示头像</label>
+
+        <label>我的头像</label>
+        <div class="av-row">
+            <div id="avMePreview" class="avatar-preview">我</div>
+            <button type="button" class="mem-btn" onclick="document.getElementById('avMeFile').click()">选择图片</button>
+            <button type="button" class="mem-btn" onclick="clearAvatar('me')">移除图片</button>
+            <input type="file" id="avMeFile" accept="image/*" style="display:none" onchange="handleAvatarFile('me', event)">
+        </div>
+        <input id="avMeText" maxlength="2" placeholder="没有图片时显示，可填字母或 emoji，如 M / ✨" onchange="saveUiSettings()" style="margin-top:8px;">
+
+        <label>对方头像</label>
+        <div class="av-row">
+            <div id="avAiPreview" class="avatar-preview">A</div>
+            <button type="button" class="mem-btn" onclick="document.getElementById('avAiFile').click()">选择图片</button>
+            <button type="button" class="mem-btn" onclick="clearAvatar('ai')">移除图片</button>
+            <input type="file" id="avAiFile" accept="image/*" style="display:none" onchange="handleAvatarFile('ai', event)">
+        </div>
+        <input id="avAiText" maxlength="2" placeholder="没有图片时显示，可填字母或 emoji，如 A / 🌙" onchange="saveUiSettings()" style="margin-top:8px;">
+
+        <label>我的气泡颜色</label>
+        <input type="color" id="colMe" onchange="saveUiSettings()">
+        <label>AI 气泡颜色</label>
+        <input type="color" id="colAi" onchange="saveUiSettings()">
+        <div class="mem-actions" style="margin-top:10px;">
+            <button type="button" class="mem-btn" onclick="resetUiColors()">恢复默认颜色</button>
+        </div>
+
+        <label class="switch-row" style="margin-top:16px;"><input type="checkbox" id="uiAnimOn" onchange="saveUiSettings()"> 消息上滑动画</label>
+
+        <div style="font-size:12px; color:#aaa; margin-top:12px;">头像只存在这台设备；清缓存会丢。</div>
     </div>
 </div>
 
@@ -486,6 +655,10 @@
         <input id="cfgKey" type="password" placeholder="sk-...">
         <label>模型名称 (Model)</label>
         <input id="cfgModel" placeholder="deepseek-flash">
+        <label>温度 temperature（0–2，越高越发散；聊天建议 1.2）</label>
+        <input id="cfgTemp" type="number" min="0" max="2" step="0.1" placeholder="1.2">
+        <label>top_p（0–1，一般不用改；和温度只调一个）</label>
+        <input id="cfgTopP" type="number" min="0" max="1" step="0.05" placeholder="1">
         <div class="modal-row">
             <button class="btn-cancel" onclick="closeSettings()">取消</button>
             <button class="btn-save" onclick="saveSettings()">保存</button>
@@ -649,7 +822,149 @@
     });
 </script>
 <script>
-    // 全局状态
+    /* ============================================================
+       脚本目录：（Ctrl+F 搜【Jxx】直接跳）
+       【J01】全局状态
+       【J02】默认配置与存储
+       【J03】全局档案（跨对话共享）
+       【J04】记忆系统（概况/事件/触发）
+       【J05】锁屏密码
+       【J06】天气
+       【J07】主动消息（解密/合并）
+       【J08】人设同步
+       【J09】时间设定（现实/剧情）
+       【J10】记忆系统（结束标记）
+       【J11】初始化函数 init
+       【J12】页面内确认框
+       【J13】重命名弹窗
+       【J14】设置中心
+       【J15】时间戳·长按菜单·导出
+       【J16】Markdown 渲染
+       【J17】发送消息与流式输出
+       ============================================================ */
+
+    // ===== 页面管理：头像 / 气泡颜色 / 动效 =====
+    function avGet(k) { return localStorage.getItem(k) || ''; }
+
+    function makeAvatar(role) {
+        const box = document.createElement('div');
+        box.className = 'avatar';
+        const src = avGet(role === 'user' ? 'chat.avatar.me' : 'chat.avatar.ai');
+        if (src) {
+            const im = document.createElement('img');
+            im.src = src;
+            im.alt = '';
+            box.appendChild(im);
+        } else {
+            const custom = role === 'user'
+                ? avGet('chat.avatar.meText')
+                : avGet('chat.avatar.aiText');
+            box.textContent = custom || (role === 'user' ? '我' : 'A');
+        }
+        return box;
+    }
+
+    function renderAvatarPreviews() {
+        [['avMePreview', 'chat.avatar.me', 'chat.avatar.meText', '我'], ['avAiPreview', 'chat.avatar.ai', 'chat.avatar.aiText', 'A']].forEach(function (t) {
+            const el = document.getElementById(t[0]);
+            if (!el) return;
+            const src = avGet(t[1]);
+            el.innerHTML = '';
+            if (src) {
+                const im = document.createElement('img');
+                im.src = src;
+                el.appendChild(im);
+            } else {
+                el.textContent = avGet(t[2]) || t[3];
+            }
+        });
+    }
+
+    function hexToRgba(hex, alpha) {
+        const h = String(hex || '').replace('#', '');
+        if (h.length !== 6) return hex;
+        const r = parseInt(h.slice(0, 2), 16);
+        const g = parseInt(h.slice(2, 4), 16);
+        const b = parseInt(h.slice(4, 6), 16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+
+    function applyUiSettings() {
+        const on = localStorage.getItem('chat.avatar.on') !== '0';
+        document.body.classList.toggle('no-avatar', !on);
+        const anim = localStorage.getItem('chat.anim.on') !== '0';
+        document.body.classList.toggle('no-anim', !anim);
+        const me = avGet('chat.color.me');
+        const ai = avGet('chat.color.ai');
+        const root = document.documentElement.style;
+        if (me) root.setProperty('--bubble-me-bg', hexToRgba(me, 0.86)); else root.removeProperty('--bubble-me-bg');
+        if (ai) root.setProperty('--bubble-ai-bg', hexToRgba(ai, 0.86)); else root.removeProperty('--bubble-ai-bg');
+        renderAvatarPreviews();
+    }
+
+    function fillUiSettings() {
+        document.getElementById('uiAvatarOn').checked = localStorage.getItem('chat.avatar.on') !== '0';
+        document.getElementById('uiAnimOn').checked = localStorage.getItem('chat.anim.on') !== '0';
+        document.getElementById('avMeText').value = avGet('chat.avatar.meText');
+        document.getElementById('avAiText').value = avGet('chat.avatar.aiText');
+        document.getElementById('colMe').value = avGet('chat.color.me') || '#f8dfe7';
+        document.getElementById('colAi').value = avGet('chat.color.ai') || '#eef0f2';
+        renderAvatarPreviews();
+    }
+
+    function saveUiSettings() {
+        localStorage.setItem('chat.avatar.on', document.getElementById('uiAvatarOn').checked ? '1' : '0');
+        localStorage.setItem('chat.anim.on', document.getElementById('uiAnimOn').checked ? '1' : '0');
+        localStorage.setItem('chat.avatar.meText', String(document.getElementById('avMeText').value || '').trim().slice(0, 2));
+        localStorage.setItem('chat.avatar.aiText', String(document.getElementById('avAiText').value || '').trim().slice(0, 2));
+        const me = document.getElementById('colMe').value;
+        const ai = document.getElementById('colAi').value;
+        if (me) localStorage.setItem('chat.color.me', me);
+        if (ai) localStorage.setItem('chat.color.ai', ai);
+        applyUiSettings();
+        toast('已保存');
+    }
+
+    function resetUiColors() {
+        localStorage.removeItem('chat.color.me');
+        localStorage.removeItem('chat.color.ai');
+        applyUiSettings();
+        fillUiSettings();
+        toast('已恢复默认颜色');
+    }
+
+    function handleAvatarFile(which, ev) {
+        const f = ev.target.files && ev.target.files[0];
+        ev.target.value = '';
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = function () {
+            const img = new Image();
+            img.onload = function () {
+                const size = 128;
+                const c = document.createElement('canvas');
+                c.width = size; c.height = size;
+                const ctx = c.getContext('2d');
+                const s = Math.min(img.width, img.height);
+                ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+                localStorage.setItem(which === 'me' ? 'chat.avatar.me' : 'chat.avatar.ai', c.toDataURL('image/jpeg', 0.85));
+                applyUiSettings();
+                if (!isGenerating) renderChat();
+                toast('头像已更新');
+            };
+            img.src = r.result;
+        };
+        r.readAsDataURL(f);
+    }
+
+    function clearAvatar(which) {
+        localStorage.removeItem(which === 'me' ? 'chat.avatar.me' : 'chat.avatar.ai');
+        applyUiSettings();
+        if (!isGenerating) renderChat();
+        toast('已移除头像');
+    }
+
+    // 【J01】全局状态
     let isDeepThink = localStorage.getItem('chat.deepthink') === 'true';
     let pendingImage = null;
     let pendingFileText = '';
@@ -668,9 +983,9 @@
         set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
     };
 
-    // 默认配置
+    // 【J02】默认配置与存储
     let cfg = DB.get('chat.cfg', { url: 'https://api.deepseek.com/v1/chat/completions', key: '', model: 'deepseek-flash' });
-    // ===== 全局档案：跨对话共享的"关于用户"的稳定信息 =====
+    // 【J03】全局档案（跨对话共享）
     let profile = DB.get('chat.profile', { text: '', on: true });
     if (!profile || typeof profile !== 'object') profile = { text: '', on: true };
     if (typeof profile.text !== 'string') profile.text = '';
@@ -703,7 +1018,7 @@
     let sessions = DB.get('chat.sessions', []);
     let currentId = localStorage.getItem('chat.cur');
 
-    /* ==================== 记忆重构 MEM-BEGIN ==================== */
+    // 【J04】记忆系统（概况/事件/触发）
     const MEM_TRIGGER = 8;         // 新增这么多条消息后检查一次记忆
     const MEM_SOFT_LIMIT = 2000;   // 记忆文本超过此长度，要求 AI 压缩
     const MEM_MAX_EVENTS = 60;     // 事件条数上限（防止无限增长）
@@ -771,10 +1086,48 @@
         return '【当前时间】' + todayStr(d) + ' ' + cnWeekday(d) + ' ' + cnPeriod(d) + ' ' + d.getHours() + ' 点（' + timeLabel(s) + '）';
     }
 
+
+    // 把毫秒说成"人话"
+    function humanDuration(ms) {
+        if (ms < 60000) return '刚刚';
+        const m = Math.round(ms / 60000);
+        if (m < 60) return m + ' 分钟';
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + ' 小时';
+        const d = Math.floor(h / 24);
+        if (d < 30) return d + ' 天';
+        const mo = Math.floor(d / 30);
+        return mo + ' 个月';
+    }
+
+    // 给模型的"时间流逝感"：距上次对话多久 + 本次聊了多久
+    function gapLine(s) {
+        const list = (s.messages || []).filter(function (m) { return typeof m.ts === 'number'; });
+        if (!list.length) return '';
+        const now = sessionNow(s).getTime();
+        // 最后一条是刚发出的这条消息，比较时跳过它
+        const prev = list.length > 1 ? list[list.length - 2] : null;
+        const out = [];
+        if (prev) {
+            const gap = now - prev.ts;
+            if (gap >= 60000) {
+                const d = new Date(prev.ts);
+                const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                out.push('【距上次对话】约 ' + humanDuration(gap) + '（上次在 ' + hm + '）');
+            }
+        }
+        const first = list[0];
+        if (first && list.length >= 3) {
+            const span = now - first.ts;
+            if (span >= 3600000) out.push('【本次对话已持续】约 ' + humanDuration(span));
+        }
+        return out.join('\n');
+    }
+
     function memIsOn(s) { return !s.memOff; }
 
     // 组装 system prompt：人设 → 当前时间 → 长期记忆
-    // ===== 锁屏密码（仅界面锁，不加密数据） =====
+    // 【J05】锁屏密码
     const LOCK_KEY = 'chat.lock';
     const LOCK_UNTIL = 'chat.lock.until';
     let lockBuf = '';
@@ -818,6 +1171,11 @@
         document.getElementById('lockScreen').style.display = 'flex';
         lockBuf = '';
         renderLockDots();
+        const hint = document.getElementById('lockHint');
+        if (hint) {
+            const n = (lockData() || {}).len || 4;
+            hint.textContent = '请输入 ' + n + ' 位数字';
+        }
     }
 
     function hideLock() {
@@ -856,8 +1214,15 @@
             hideLock();
             return;
         }
-        lockBuf = '';
-        renderLockDots();
+        // 先让用户看到"这几位错了"，0.45 秒后再清空
+        const dotsEl = document.getElementById('lockDots');
+        if (dotsEl) {
+            Array.prototype.forEach.call(dotsEl.children, function (c) { c.className = 'dot wrong'; });
+        }
+        setTimeout(function () {
+            lockBuf = '';
+            renderLockDots();
+        }, 450);
         lockFails++;
         if (lockFails >= 5) {
             lockCoolUntil = Date.now() + 30000;
@@ -866,6 +1231,17 @@
         } else if (msg) {
             msg.textContent = '密码不对，还可尝试 ' + (5 - lockFails) + ' 次';
         }
+    }
+
+    async function forgotLock() {
+        const ok = await uiAsk('解除锁屏密码', '只删除锁屏密码，聊天记录和设置都保留。确定吗？');
+        if (!ok) return;
+        localStorage.removeItem(LOCK_KEY);
+        localStorage.removeItem(LOCK_UNTIL);
+        lockBuf = '';
+        lockFails = 0;
+        hideLock();
+        toast('已解除锁屏');
     }
 
     async function resetAllData() {
@@ -907,7 +1283,7 @@
         toast('锁屏已关闭');
     }
 
-    // ===== 天气（Open-Meteo，免费无需 Key） =====
+    // 【J06】天气
     let weatherCache = { at: 0, text: '' };
 
     function weatherText(code) {
@@ -945,7 +1321,7 @@
         }
     }
 
-    // ===== 主动消息：读取 outbox.enc → 解密 → 去重合并 =====
+    // 【J07】主动消息（解密/合并）
     function b64ToBytes(b64) {
         const bin = atob(b64);
         const arr = new Uint8Array(bin.length);
@@ -986,12 +1362,19 @@
             list.forEach(function (m) {
                 if (!m || !m.ts || !m.text) return;
                 if (seen.has(m.ts)) return;
-                s.messages.push({ role: 'assistant', content: m.text, ts: m.ts, proactive: true });
+                const item = { role: 'assistant', content: m.text, ts: m.ts, proactive: true };
+                // 只在"有时间戳"的消息里找位置；没有 ts 的旧消息保持原位，绝不重排
+                let pos = -1;
+                for (let i = 0; i < s.messages.length; i++) {
+                    const t = s.messages[i].ts;
+                    if (typeof t === 'number' && t > item.ts) { pos = i; break; }
+                }
+                if (pos >= 0) s.messages.splice(pos, 0, item);
+                else s.messages.push(item);
                 seen.add(m.ts);
                 added++;
             });
             if (added) {
-                s.messages.sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
                 s.updatedAt = Date.now();
                 saveData();
                 if (!isGenerating) renderChat();
@@ -1003,7 +1386,7 @@
         }
     }
 
-    // ===== 人设同步到云端（加密后提交 profile.enc） =====
+    // 【J08】人设同步
     function bytesToB64(bytes) {
         let bin = '';
         for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
@@ -1163,7 +1546,11 @@
     function buildSystemPrompt(s) {
         const parts = [];
         if (s.systemPrompt) parts.push(s.systemPrompt);
-        if (timeModeOf(s) !== 'off') parts.push(nowLine(s));
+        if (timeModeOf(s) !== 'off') {
+            parts.push(nowLine(s));
+            const gl = gapLine(s);
+            if (gl) parts.push(gl);
+        }
         if (weatherCache.text) parts.push('【当前天气】' + weatherCache.text);
         const pb = profileBlock();
         if (pb) parts.push(pb);
@@ -1208,7 +1595,7 @@
         });
     }
 
-    // ===== 时间设定：现实 / 剧情（可快进）/ 不注入 =====
+    // 【J09】时间设定（现实/剧情）
     function timeModeOf(s) { return (s && s.timeMode) ? s.timeMode : 'real'; }
 
     function sessionNow(s) {
@@ -1351,7 +1738,8 @@
                             { role: 'system', content: sys },
                             { role: 'user', content: userMsg }
                         ],
-                        stream: false
+                        stream: false,
+                        temperature: 0.3
                     }),
                     signal: ctrl.signal
                 });
@@ -1463,7 +1851,9 @@
         };
         reader.readAsText(file);
     }
-    /* ==================== 记忆重构 MEM-END ==================== */
+    // 【J10】记忆系统（结束标记）
+
+    // 【J11】初始化函数 init
 
     function init() {
         if (sessions.length === 0) {
@@ -1482,6 +1872,7 @@
         sessions.forEach(function (x) { memEnsure(x); });
         renderMemSwitch();
         bindTimeMode();
+        applyUiSettings();
         if (lockActive()) showLock();
         pullProactive(false);
         setInterval(function () { pullProactive(false); }, 5 * 60 * 1000);
@@ -1548,7 +1939,7 @@
         });
     }
 
-    // ===== 页面内确认框（confirm/alert 可能被浏览器拦截） =====
+    // 【J12】页面内确认框
     let confirmResolve = null;
 
     function uiAsk(title, text) {
@@ -1581,7 +1972,7 @@
         if (r) r(!!ok);
     }
 
-    // ===== 重命名（不用 prompt，避免被浏览器拦截） =====
+    // 【J13】重命名弹窗
     let renamingId = null;
 
     function openRename(id) {
@@ -1651,11 +2042,11 @@
         document.getElementById('overlay').classList.toggle('on');
     }
 
-    // ===== 设置中心：hub / 对话设置 / API 连接 =====
+    // 【J14】设置中心
     function openSettingsHub() { showSettingsPanel('hub'); }
 
     function showSettingsPanel(which) {
-        ['settingsHub', 'settings', 'sessionSettingsModal', 'notifyModal', 'lockModal'].forEach(function (id) {
+        ['settingsHub', 'settings', 'sessionSettingsModal', 'notifyModal', 'lockModal', 'uiModal'].forEach(function (id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -1671,13 +2062,16 @@
         } else if (which === 'lock') {
             fillLockSettings();
             document.getElementById('lockModal').style.display = 'flex';
+        } else if (which === 'ui') {
+            fillUiSettings();
+            document.getElementById('uiModal').style.display = 'flex';
         } else {
             document.getElementById('settingsHub').style.display = 'flex';
         }
     }
 
     function closeAllSettings() {
-        ['settingsHub', 'settings', 'sessionSettingsModal', 'notifyModal', 'lockModal'].forEach(function (id) {
+        ['settingsHub', 'settings', 'sessionSettingsModal', 'notifyModal', 'lockModal', 'uiModal'].forEach(function (id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -1745,7 +2139,7 @@
         saveData(); renderSidebar(); renderChat(); closeSessionSettings();
     }
 
-    // ===== 时间戳 / 长按菜单 / 导出 =====
+    // 【J15】时间戳·长按菜单·导出
     function fmtMsgTime(ts) {
         const d = new Date(ts);
         const now = new Date();
@@ -1834,6 +2228,9 @@
         menu.className = 'msg-menu';
         menu.id = 'msgMenu';
         const items = [{ label: '复制', fn: function () { copyMsg(m); } }];
+        if (m.role === 'user') {
+            items.push({ label: '编辑', fn: function () { editMessage(index); } });
+        }
         if (m.role !== 'user') {
             items.push({ label: '朗读', fn: function () { speakMsg(m); } });
             items.push({ label: '重新生成', fn: function () { regenerateAt(index); } });
@@ -1929,7 +2326,7 @@
         });
     }
 
-    /* ============ 轻量 Markdown 渲染（零依赖：先转义再解析，天然防 XSS） ============ */
+    // 【J16】Markdown 渲染
     let mdPaintAt = 0;
 
     function mdEscape(s) {
@@ -2102,19 +2499,21 @@
         return out.join('');
     }
 
+    // 只给"刚刚新增的消息"播放入场动画，切换会话绝不重播
+    function animateLastBubble() {
+        const box = document.getElementById('msgs');
+        if (!box) return;
+        const el = box.lastElementChild;
+        if (!el) return;
+        el.classList.remove('enter');
+        void el.offsetWidth;
+        el.classList.add('enter');
+    }
+
     function addBubble(cls, content, displayText, imageBase64, index, role, fileName, reasoning, ts) {
         const wrap = document.createElement('div');
         wrap.className = `msg-wrap ${cls}`;
         
-        if (role === 'user') {
-            const editBtn = document.createElement('button');
-            editBtn.className = 'edit-btn';
-            editBtn.textContent = '○';
-            editBtn.title = '点击修改';
-            editBtn.onclick = () => editMessage(index);
-            wrap.appendChild(editBtn);
-        }
-
         const d = document.createElement('div');
         d.className = 'msg';
 
@@ -2158,7 +2557,14 @@
         // 修改点 8：这里原本还有 "if (role === 'user') d.onclick = () => editMessage(index);"
         // 已删除 —— 现在只有 ○ 按钮能进入修改
 
-        wrap.appendChild(d);
+        const av = makeAvatar(role);
+        if (role === 'user') {
+            wrap.appendChild(d);
+            wrap.appendChild(av);
+        } else {
+            wrap.appendChild(av);
+            wrap.appendChild(d);
+        }
         attachLongPress(wrap, index);
         const msgsEl = document.getElementById('msgs');
         msgsEl.appendChild(wrap);
@@ -2345,6 +2751,8 @@
         }
     }
 
+    // 【J17】发送消息与流式输出
+
     async function send() {
         const inp = document.getElementById('inp');
         const btn = document.getElementById('send');
@@ -2384,6 +2792,7 @@
         document.getElementById('title').textContent = s.name;
 
         renderChat();
+        animateLastBubble();
 
         inp.value = ''; inp.style.height = '24px';
         pendingImage = null; pendingFileText = ''; pendingFileName = null;
@@ -2396,6 +2805,7 @@
 
         const wrap = document.createElement('div');
         wrap.className = `msg-wrap ai`;
+        wrap.appendChild(makeAvatar('assistant'));
         const d = document.createElement('div');
         d.className = 'msg';
         
@@ -2405,7 +2815,7 @@
         reasonWrapper.style.display = 'none';
         const reasonHeader = document.createElement('div');
         reasonHeader.className = 'reasoning-header';
-        reasonHeader.innerHTML = '思考中... <span>▶</span>';
+        reasonHeader.innerHTML = '思考中<span class="typing"><i></i><i></i><i></i></span> <span>▶</span>';
         reasonHeader.onclick = function() { toggleReasoning(this); };
         const reasonContent = document.createElement('div');
         reasonContent.className = 'reasoning-content md-body';
@@ -2414,6 +2824,11 @@
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'md-body';
+        // 等第一个字到达前，先显示三个跳动的点，避免看起来卡住
+        const typingEl = document.createElement('div');
+        typingEl.className = 'typing';
+        typingEl.innerHTML = '<i></i><i></i><i></i>';
+        contentDiv.appendChild(typingEl);
 
         d.appendChild(reasonWrapper);
         d.appendChild(contentDiv);
@@ -2440,6 +2855,8 @@
             }
 
             const bodyObj = { model: actualModel, messages: payloadMsgs, stream: true };
+            if (typeof cfg.temperature === 'number') bodyObj.temperature = cfg.temperature;
+            if (typeof cfg.top_p === 'number') bodyObj.top_p = cfg.top_p;
             if (isDeepThink) bodyObj.thinking = { type: "enabled" };
             else bodyObj.thinking = { type: "disabled" };
 
@@ -2478,6 +2895,7 @@
                         }
                         if (delta?.content) {
                             full += delta.content;
+                            if (typingEl && typingEl.parentNode) typingEl.remove();
                             const _t = Date.now();
                             if (_t - mdPaintAt > 90) { mdPaintAt = _t; contentDiv.innerHTML = renderMarkdown(full); }
                             msgsEl.scrollTop = msgsEl.scrollHeight;
@@ -2488,9 +2906,16 @@
 
             if (full) {
                 contentDiv.innerHTML = renderMarkdown(full);
+                if (isDeepThink && !fullReasoning) {
+                    const hint = document.createElement('div');
+                    hint.className = 'no-reason-hint';
+                    hint.textContent = '本次模型未返回思考过程';
+                    d.appendChild(hint);
+                }
                 s.messages.push({ role:'assistant', content: full, reasoning: fullReasoning || null, ts: Date.now() });
                 trimReasonings(s);
                 s.updatedAt = Date.now(); saveData();
+                animateLastBubble();
             }
             if (fullReasoning) reasonHeader.innerHTML = '已深度思考 <span>▶</span>';
 
@@ -2509,6 +2934,7 @@
                 contentDiv.style.background = '#fee';
             }
         } finally {
+            if (typeof typingEl !== 'undefined' && typingEl && typingEl.parentNode) typingEl.remove();
             isGenerating = false;
             btn.textContent = '↑';
             btn.classList.remove('stop-mode');
@@ -2523,13 +2949,20 @@
         document.getElementById('cfgUrl').value = cfg.url;
         document.getElementById('cfgKey').value = cfg.key;
         document.getElementById('cfgModel').value = cfg.model;
+        document.getElementById('cfgTemp').value = (typeof cfg.temperature === 'number') ? cfg.temperature : '';
+        document.getElementById('cfgTopP').value = (typeof cfg.top_p === 'number') ? cfg.top_p : '';
     }
     function openSettings() { showSettingsPanel('api'); }
     function closeSettings() { showSettingsPanel('hub'); }
     function saveSettings() {
+        const temp = parseFloat(document.getElementById('cfgTemp').value);
+        const topP = parseFloat(document.getElementById('cfgTopP').value);
         cfg = { url: document.getElementById('cfgUrl').value.trim(), key: document.getElementById('cfgKey').value.trim(), model: document.getElementById('cfgModel').value.trim() };
+        if (Number.isFinite(temp)) cfg.temperature = Math.min(2, Math.max(0, temp));
+        if (Number.isFinite(topP)) cfg.top_p = Math.min(1, Math.max(0, topP));
         DB.set('chat.cfg', cfg);
         showSettingsPanel('hub');
+        toast('已保存');
     }
 
     (function bindLockPad() {

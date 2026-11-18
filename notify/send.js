@@ -228,7 +228,8 @@ async function generate(text) {
       model: MODEL,
       messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
       stream: false,
-      max_tokens: 80
+      max_tokens: 80,
+      temperature: 1.2
     })
   });
   if (!res.ok) throw new Error('API ' + res.status);
