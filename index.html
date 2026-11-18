@@ -1403,6 +1403,16 @@
         );
     }
 
+    // 未读角标：<title> 显示 (N)
+    let unreadNotify = 0;
+    function updateTitleBadge() {
+        const base = 'My Chat';
+        document.title = unreadNotify > 0 ? ('(' + unreadNotify + ') ' + base) : base;
+    }
+    function clearTitleBadge() {
+        if (unreadNotify) { unreadNotify = 0; updateTitleBadge(); }
+    }
+
     async function pullProactive(manual) {
         const pwd = localStorage.getItem('chat.notify.pwd') || '';
         if (!pwd) { if (manual) toast('请先在上方填写解密密码并保存'); return; }
@@ -1442,6 +1452,11 @@
                 saveData();
                 renderSidebar();
                 if (s.id === currentId && !isGenerating) renderChat();
+                if (!manual) {
+                    unreadNotify += added;
+                    updateTitleBadge();
+                    toast('收到 ' + added + ' 条新消息' + (s.id === currentId ? '' : '（在「' + s.name + '」）'));
+                }
             }
             renderNotifyStatus();
             if (manual) {
@@ -1960,10 +1975,13 @@
         applyUiSettings();
         if (lockActive()) showLock();
         pullProactive(false);
-        setInterval(function () { pullProactive(false); }, 5 * 60 * 1000);
+        // 每 3 分钟检查一次；页面在后台时不查，省流量和电
+        setInterval(function () { if (!document.hidden) pullProactive(false); }, 3 * 60 * 1000);
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) pullProactive(false);
+            if (!document.hidden) { clearTitleBadge(); pullProactive(false); }
         });
+        window.addEventListener('focus', function () { clearTitleBadge(); });
+        document.addEventListener('click', function () { clearTitleBadge(); }, true);
     }
 
     function createSession() {
