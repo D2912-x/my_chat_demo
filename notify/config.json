@@ -1,8 +1,7 @@
 {
-  "windowStart": "00:00",
+  "windowStart": "09:00",
   "windowEnd": "23:00",
-  "minPerDay": 1,
-  "maxPerDay": 1,
-  "maxMessages": 50,
-  "forceNow": true
+  "minPerDay": 0,
+  "maxPerDay": 5,
+  "maxMessages": 50
 }

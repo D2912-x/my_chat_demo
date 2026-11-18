@@ -37,6 +37,8 @@ try {
   if (Number.isFinite(raw.maxPerDay)) cfg.maxPerDay = raw.maxPerDay;
   if (Number.isFinite(raw.perDay) && !Number.isFinite(raw.maxPerDay)) { cfg.minPerDay = raw.perDay; cfg.maxPerDay = raw.perDay; }
   if (Number.isFinite(raw.maxMessages)) cfg.maxMessages = raw.maxMessages;
+  if (raw.forceNow === true) cfg.forceNow = true;   // 测试用：立即发送
+  if (Number.isFinite(raw.staleMinutes)) cfg.staleMinutes = raw.staleMinutes;
 } catch (e) { /* 用默认值 */ }
 
 function die(msg) { console.error(msg); process.exit(1); }
