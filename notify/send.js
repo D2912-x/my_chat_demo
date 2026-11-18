@@ -22,7 +22,7 @@ const MODEL = env.DEEPSEEK_MODEL || 'deepseek-chat';
 let PROFILE = {};
 try { PROFILE = JSON.parse(env.PROFILE_JSON || '{}'); } catch (e) { PROFILE = {}; }
 
-let cfg = { windowStart: 540, windowEnd: 1380, minPerDay: 0, maxPerDay: 5, maxMessages: 50, staleMinutes: 180 };
+let cfg = { windowStart: 540, windowEnd: 1380, minPerDay: 0, maxPerDay: 5, maxMessages: 50, staleMinutes: 180, forceNow: false };
 try {
   const raw = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8'));
   if (typeof raw.windowStart === 'string') {
@@ -185,6 +185,12 @@ if (!kind) {
     kind = 'greet';
     break;
   }
+}
+
+if (!kind && cfg.forceNow) {
+  // 测试模式：忽略随机时间点，立刻发一条
+  kind = 'greet';
+  console.log('[' + now.hm + '] 测试模式（forceNow）：立即发送一条');
 }
 
 if (!kind) {
