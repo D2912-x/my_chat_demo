@@ -377,6 +377,21 @@
         #uiModal input[type="color"] { width: 100%; height: 40px; padding: 4px; background: #f5f5f5; border: 1px solid var(--border); border-radius: 8px; }
 
         .no-reason-hint { font-size: 12px; color: #b0a9a3; margin-top: 8px; }
+        .sw-row { display: flex; gap: 10px; margin: 8px 0 14px; flex-wrap: wrap; }
+        .sw {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.08); cursor: pointer; padding: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: transform .12s ease;
+        }
+        .sw:active { transform: scale(0.9); }
+        .sw.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent); }
+        .hex-row { display: flex; gap: 8px; align-items: center; margin: 0 0 14px; }
+        .hex-row input {
+            flex: 1; padding: 8px 10px; border-radius: 8px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.8);
+            font: inherit; font-size: 14px; color: var(--text-main);
+        }
 
         /* 【C13】附件托盘 */
         .attach-tray { display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
@@ -550,7 +565,7 @@
 <div id="lockModal">
     <div class="modal-content">
         <div class="panel-head">
-            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <button class="back-btn" onclick="showSettingsPanel('hub')">‹</button>
             <h3>锁屏密码</h3>
             <span class="panel-spacer"></span>
         </div>
@@ -569,7 +584,7 @@
 <div id="uiModal">
     <div class="modal-content">
         <div class="panel-head">
-            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <button class="back-btn" onclick="showSettingsPanel('hub')">‹</button>
             <h3>页面管理</h3>
             <span class="panel-spacer"></span>
         </div>
@@ -596,8 +611,13 @@
 
         <label>我的气泡颜色</label>
         <input type="color" id="colMe" onchange="saveUiSettings()">
+        <div class="sw-row" id="swMe"><button type="button" class="sw" data-c="#f4ecdf" style="background:#f4ecdf" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f5dfe3" style="background:#f5dfe3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e2ece2" style="background:#e2ece2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#dfe8f2" style="background:#dfe8f2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f2e4d8" style="background:#f2e4d8" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e9e2ef" style="background:#e9e2ef" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f8f0e2" style="background:#f8f0e2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f0e2e2" style="background:#f0e2e2" onclick="setBubbleColor(this)"></button></div>
+        <div class="hex-row"><input id="hexMe" placeholder="#f8dfe7"><button type="button" class="mem-btn" onclick="applyHexColor('me')">应用</button></div>
         <label>AI 气泡颜色</label>
         <input type="color" id="colAi" onchange="saveUiSettings()">
+        <div class="sw-row" id="swAi"><button type="button" class="sw" data-c="#eeebe6" style="background:#eeebe6" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#ece8ee" style="background:#ece8ee" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#eceee9" style="background:#eceee9" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e9eef3" style="background:#e9eef3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#efeae3" style="background:#efeae3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#eceaee" style="background:#eceaee" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e8e6e2" style="background:#e8e6e2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#ebe7e2" style="background:#ebe7e2" onclick="setBubbleColor(this)"></button></div>
+        <div class="hex-row"><input id="hexAi" placeholder="#eef0f2"><button type="button" class="mem-btn" onclick="applyHexColor('ai')">应用</button></div>
+        <div style="font-size:12px; color:#aaa; margin-top:6px;">点圆点换色；取色器部分手机打不开，可在输入框填 #RRGGBB 后点应用。</div>
         <div class="mem-actions" style="margin-top:10px;">
             <button type="button" class="mem-btn" onclick="resetUiColors()">恢复默认颜色</button>
         </div>
@@ -612,7 +632,7 @@
 <div id="notifyModal">
     <div class="modal-content">
         <div class="panel-head">
-            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <button class="back-btn" onclick="showSettingsPanel('hub')">‹</button>
             <h3>主动消息</h3>
             <span class="panel-spacer"></span>
         </div>
@@ -645,7 +665,7 @@
 <div id="settings">
     <div class="modal-content">
         <div class="panel-head">
-            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <button class="back-btn" onclick="showSettingsPanel('hub')">‹</button>
             <h3>API 连接</h3>
             <span class="panel-spacer"></span>
         </div>
@@ -670,7 +690,7 @@
 <div id="sessionSettingsModal">
     <div class="modal-content">
         <div class="panel-head">
-            <button class="back-btn" onclick="showSettingsPanel('hub')">←</button>
+            <button class="back-btn" onclick="showSettingsPanel('hub')">‹</button>
             <h3>对话设置</h3>
             <span class="panel-spacer"></span>
         </div>
@@ -902,14 +922,54 @@
         renderAvatarPreviews();
     }
 
+    function setBubbleColor(btn) {
+        const row = btn.parentNode;
+        const hex = btn.getAttribute('data-c');
+        const key = row && row.id === 'swMe' ? 'chat.color.me' : 'chat.color.ai';
+        localStorage.setItem(key, hex);
+        applyUiSettings();
+        const inp = document.getElementById(row && row.id === 'swMe' ? 'colMe' : 'colAi');
+        if (inp) inp.value = hex;
+        markSwatches();
+        toast('已换色');
+    }
+
+    function applyHexColor(which) {
+        const inp = document.getElementById(which === 'me' ? 'hexMe' : 'hexAi');
+        if (!inp) return;
+        let v = String(inp.value || '').trim();
+        if (v && v.charAt(0) !== '#') v = '#' + v;
+        if (!/^#[0-9a-fA-F]{6}$/.test(v)) { toast('请输入 #RRGGBB，例如 #f8dfe7'); return; }
+        localStorage.setItem(which === 'me' ? 'chat.color.me' : 'chat.color.ai', v.toLowerCase());
+        applyUiSettings();
+        fillUiSettings();
+        toast('已换色');
+    }
+
+    function markSwatches() {
+        [['swMe', 'chat.color.me'], ['swAi', 'chat.color.ai']].forEach(function (t) {
+            const row = document.getElementById(t[0]);
+            if (!row) return;
+            const cur = avGet(t[1]);
+            Array.prototype.forEach.call(row.children, function (b) {
+                b.classList.toggle('on', cur && b.getAttribute('data-c') === cur);
+            });
+        });
+    }
+
     function fillUiSettings() {
         document.getElementById('uiAvatarOn').checked = localStorage.getItem('chat.avatar.on') !== '0';
         document.getElementById('uiAnimOn').checked = localStorage.getItem('chat.anim.on') !== '0';
         document.getElementById('avMeText').value = avGet('chat.avatar.meText');
         document.getElementById('avAiText').value = avGet('chat.avatar.aiText');
+        const hm = document.getElementById('hexMe');
+        if (hm) hm.value = avGet('chat.color.me');
+        const ha = document.getElementById('hexAi');
+        if (ha) ha.value = avGet('chat.color.ai');
         document.getElementById('colMe').value = avGet('chat.color.me') || '#f8dfe7';
         document.getElementById('colAi').value = avGet('chat.color.ai') || '#eef0f2';
         renderAvatarPreviews();
+        markSwatches();
     }
 
     function saveUiSettings() {
