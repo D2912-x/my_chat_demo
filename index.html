@@ -644,6 +644,8 @@
         <input id="profNameInp" placeholder="例如 小晔">
         <label>人设取自哪个对话</label>
         <select id="provSessionSel" style="width:100%; background:#f5f5f5; color:var(--text-main); border:1px solid var(--border); border-radius:8px; padding:10px; font:inherit; font-size:15px;"></select>
+        <label>拉取后消息存到哪个对话</label>
+        <select id="provTargetSel" style="width:100%; background:#f5f5f5; color:var(--text-main); border:1px solid var(--border); border-radius:8px; padding:10px; font:inherit; font-size:15px;"></select>
         <label>GitHub 同步（可选，填了才能自动同步人设）</label>
         <input id="ghTokenInp" type="password" placeholder="github_pat_...">
         <input id="ghRepoInp" placeholder="用户名/仓库名，例如 lin/my-chat" style="margin-top:8px;">
@@ -1405,7 +1407,7 @@
         const pwd = localStorage.getItem('chat.notify.pwd') || '';
         if (!pwd) { if (manual) toast('请先在上方填写解密密码并保存'); return; }
         try {
-            const res = await fetch('./outbox.enc?t=' + Date.now(), { cache: 'no-store' });
+            const res = await fetch('./outbox.enc?t=' + Date.now(), { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
             if (!res.ok) { if (manual) toast('没找到 outbox.enc'); return; }
             const box = await res.json();
             const salt = b64ToBytes(box.salt);
@@ -1415,7 +1417,8 @@
             const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, data);
             const obj = JSON.parse(new TextDecoder().decode(plain));
             const list = Array.isArray(obj.messages) ? obj.messages : [];
-            const s = getCurrent();
+            const wantId = localStorage.getItem('chat.notify.target') || '';
+            const s = (wantId && sessions.find(function (x) { return x.id === wantId; })) || getCurrent();
             if (!s) return;
             const seen = new Set(s.messages.filter(function (m) { return m.ts; }).map(function (m) { return m.ts; }));
             let added = 0;
@@ -1437,10 +1440,15 @@
             if (added) {
                 s.updatedAt = Date.now();
                 saveData();
-                if (!isGenerating) renderChat();
+                renderSidebar();
+                if (s.id === currentId && !isGenerating) renderChat();
             }
             renderNotifyStatus();
-            if (manual) toast(added ? ('收到 ' + added + ' 条主动消息') : '没有新的主动消息');
+            if (manual) {
+                if (added) toast('收到 ' + added + ' 条' + (s.id === currentId ? '主动消息' : '，已存入「' + s.name + '」'));
+                else if (!list.length) toast('outbox.enc 里还没有消息（稍等 1 分钟再试）');
+                else toast('文件里有 ' + list.length + ' 条，但都已存在');
+            }
         } catch (e) {
             if (manual) toast('拉取失败：' + (e && e.message ? e.message : '密码可能不对'));
         }
@@ -1567,6 +1575,21 @@
             sel.appendChild(o);
         });
         sel.value = currentId;
+
+        const tsel = document.getElementById('provTargetSel');
+        if (!tsel) return;
+        tsel.innerHTML = '';
+        const cur = document.createElement('option');
+        cur.value = '';
+        cur.textContent = '当前打开的对话（默认）';
+        tsel.appendChild(cur);
+        sessions.forEach(function (s) {
+            const o = document.createElement('option');
+            o.value = s.id;
+            o.textContent = s.name;
+            tsel.appendChild(o);
+        });
+        tsel.value = localStorage.getItem('chat.notify.target') || '';
     }
 
     function fillNotifySettings() {
@@ -1589,6 +1612,8 @@
         localStorage.setItem('chat.gh.token', document.getElementById('ghTokenInp').value.trim());
         localStorage.setItem('chat.gh.repo', document.getElementById('ghRepoInp').value.trim());
         localStorage.setItem('chat.gh.branch', document.getElementById('ghBranchInp').value.trim() || 'main');
+        const ts = document.getElementById('provTargetSel');
+        if (ts) localStorage.setItem('chat.notify.target', ts.value || '');
         weatherCache = { at: 0, text: '' };
         renderNotifyStatus();
         toast('已保存');
