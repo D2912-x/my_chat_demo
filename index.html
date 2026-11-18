@@ -107,6 +107,7 @@
         .session-item:active { background: #f0f0f0; }
         .session-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
         .session-item .name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #e08a8a; margin: 0 6px 0 2px; flex: 0 0 auto; }
         .session-item .more-btn { flex: 0 0 auto; background: none; border: none; color: #999; padding: 4px 10px; font-size: 18px; line-height: 1; cursor: pointer; }
 
         /* 【C03】主界面 */
@@ -1413,6 +1414,15 @@
         if (unreadNotify) { unreadNotify = 0; updateTitleBadge(); }
     }
 
+    function notifySeenGet() {
+        try { return JSON.parse(localStorage.getItem('chat.notify.seen') || '[]'); } catch (e) { return []; }
+    }
+    function notifySeenAdd(list) {
+        const set = new Set(notifySeenGet());
+        list.forEach(function (ts) { set.add(ts); });
+        localStorage.setItem('chat.notify.seen', JSON.stringify([...set].slice(-500)));
+    }
+
     async function pullProactive(manual) {
         const pwd = localStorage.getItem('chat.notify.pwd') || '';
         if (!pwd) { if (manual) toast('请先在上方填写解密密码并保存'); return; }
@@ -1430,7 +1440,11 @@
             const wantId = localStorage.getItem('chat.notify.target') || '';
             const s = (wantId && sessions.find(function (x) { return x.id === wantId; })) || getCurrent();
             if (!s) return;
-            const seen = new Set(s.messages.filter(function (m) { return m.ts; }).map(function (m) { return m.ts; }));
+            const seen = new Set(
+                s.messages.filter(function (m) { return m.ts; }).map(function (m) { return m.ts; })
+                    .concat(notifySeenGet())
+            );
+            const pulledTs = [];
             let added = 0;
             list.forEach(function (m) {
                 if (!m || !m.ts || !m.text) return;
@@ -1445,6 +1459,7 @@
                 if (pos >= 0) s.messages.splice(pos, 0, item);
                 else s.messages.push(item);
                 seen.add(m.ts);
+                pulledTs.push(m.ts);
                 added++;
             });
             if (added) {
@@ -1452,6 +1467,8 @@
                 saveData();
                 renderSidebar();
                 if (s.id === currentId && !isGenerating) renderChat();
+                notifySeenAdd(pulledTs);
+                if (s.id !== currentId) s.unread = (Number(s.unread) || 0) + added;
                 if (!manual) {
                     unreadNotify += added;
                     updateTitleBadge();
@@ -2032,9 +2049,15 @@
                 openMyModal(s.id);
             };
             div.appendChild(nameEl);
+            if (Number(s.unread) > 0) {
+                const dot = document.createElement('span');
+                dot.className = 'unread-dot';
+                div.appendChild(dot);
+            }
             div.appendChild(moreBtn);
             div.onclick = function () {
                 clearUndoEdit();
+                s.unread = 0;
                 currentId = s.id; saveData(); renderSidebar(); renderChat(); renderMemSwitch();
                 if (window.innerWidth < 768) toggleSidebar();
             };
