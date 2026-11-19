@@ -1,6 +1,6 @@
 {
   "name": "d_chat",
-  "short_name": "AI",
+  "short_name": "d_chat",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

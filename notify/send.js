@@ -43,8 +43,8 @@ try {
 
 function die(msg) { console.error(msg); process.exit(1); }
 if (!PWD) die('缺少 Secret: NOTIFY_PWD');
-if (!TOPIC) die('缺少 Secret: NTFY_TOPIC');
 if (!API_KEY) die('缺少 Secret: DEEPSEEK_API_KEY');
+// NTFY_TOPIC 可选：没配就只写 outbox，不推送
 
 // ---------- 人设：优先读 profile.enc（网页同步的），否则用 Secret ----------
 try {
@@ -246,7 +246,12 @@ async function generate(text) {
   return String(txt || '').trim().replace(/^["'「]|["'」]$/g, '');
 }
 
-// ---------- 推送 ----------
+/* ============================================================
+   【可选功能】ntfy 推送 —— 默认关闭
+   网页端已改为"页面内红点 + 标题数字"提示，不依赖任何推送服务。
+   NTFY_TOPIC 为空时下面这段不会执行；
+   想恢复推送：在 workflow 里加回 NTFY_TOPIC 环境变量即可。
+   ============================================================ */
 async function push(text) {
   const r = await fetch('https://ntfy.sh/' + encodeURIComponent(TOPIC), {
     method: 'POST',
@@ -268,12 +273,15 @@ async function push(text) {
     console.log('使用兜底文案');
   }
 
-  try {
-    await push(text);
-    console.log('[' + now.hm + '] 已发送（' + kind + '）');
-  } catch (e) {
-    console.error('推送失败：' + e.message);
-    process.exit(1);
+  if (TOPIC) {
+    try {
+      await push(text);
+      console.log('[' + now.hm + '] 已发送（' + kind + '）');
+    } catch (e) {
+      console.error('推送失败（不影响写入）：' + e.message);
+    }
+  } else {
+    console.log('[' + now.hm + '] 已生成（未配置推送）');
   }
 
   state.messages.push({ ts: Date.now(), text: text });
