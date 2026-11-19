@@ -599,6 +599,39 @@
     }
 
     // 每次都变的部分——拼到最后一条用户消息里，避免破坏缓存前缀
+    // 把中文句子切成 2 字片段，用于粗糙的相似度匹配
+    function bigrams(txt) {
+        const s = String(txt || '').replace(/[\s\p{P}]/gu, '');
+        const out = [];
+        for (let i = 0; i < s.length - 1; i++) out.push(s.slice(i, i + 2));
+        return out;
+    }
+
+    // 按当前话题挑相关记忆；都不相关时退回最近的几条
+    function pickMemories(s, limit) {
+        const mem = memEnsure(s);
+        const events = (mem.events || []).filter(function (e) { return e && e.text; });
+        if (!events.length) return [];
+        const recentMsgs = (s.messages || []).filter(function (m) { return m.role === 'user'; }).slice(-2);
+        const query = recentMsgs.map(function (m) { return String(m.content || m.display || ''); }).join(' ');
+        const qs = bigrams(query);
+        if (!qs.length) return events.slice(-3);
+
+        const scored = events.map(function (e, i) {
+            const hay = String(e.text || '') + ' ' + String(e.date || '');
+            let hit = 0;
+            qs.forEach(function (g) { if (hay.indexOf(g) >= 0) hit++; });
+            // 越新的事件给一点点加成
+            const recency = i / Math.max(1, events.length - 1) * 1.5;
+            return { e: e, score: hit + recency };
+        });
+        scored.sort(function (a, b) { return b.score - a.score; });
+        const top = scored.slice(0, limit || 4).map(function (x) { return x.e; });
+        // 一个都没命中关键词 → 退回最近 3 条
+        if (scored[0] && scored[0].score <= 1.5) return events.slice(-3);
+        return top;
+    }
+
     function dynamicNote(s) {
         const out = [];
         if (timeModeOf(s) !== 'off') {
@@ -614,7 +647,7 @@
 
         if (memIsOn(s)) {
             const mem = memEnsure(s);
-            const tail = (mem.events || []).slice(-3);
+            const tail = pickMemories(s, 4);
             if (mem.summary || tail.length) {
                 let r = '【记忆提醒（写回复时优先参考）】';
                 if (mem.summary) r += '\n概况：' + mem.summary;
