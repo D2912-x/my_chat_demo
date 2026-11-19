@@ -22,7 +22,7 @@ const MODEL = env.DEEPSEEK_MODEL || 'deepseek-chat';
 let PROFILE = {};
 try { PROFILE = JSON.parse(env.PROFILE_JSON || '{}'); } catch (e) { PROFILE = {}; }
 
-let cfg = { windowStart: 540, windowEnd: 1380, minPerDay: 0, maxPerDay: 5, maxMessages: 50, staleMinutes: 180, forceNow: false };
+let cfg = { windowStart: 540, windowEnd: 1380, minPerDay: 0, maxPerDay: 5, maxMessages: 50, staleMinutes: 180, catchupMinutes: 480, forceNow: false };
 try {
   const raw = JSON.parse(fs.readFileSync(CFG_PATH, 'utf8'));
   if (typeof raw.windowStart === 'string') {
@@ -39,6 +39,7 @@ try {
   if (Number.isFinite(raw.maxMessages)) cfg.maxMessages = raw.maxMessages;
   if (raw.forceNow === true) cfg.forceNow = true;   // 测试用：立即发送
   if (Number.isFinite(raw.staleMinutes)) cfg.staleMinutes = raw.staleMinutes;
+  if (Number.isFinite(raw.catchupMinutes)) cfg.catchupMinutes = raw.catchupMinutes;
 } catch (e) { /* 用默认值 */ }
 
 function die(msg) { console.error(msg); process.exit(1); }
@@ -177,16 +178,27 @@ for (const a of anns) {
 }
 
 const slots = slotsFor(now.date);
+let catchupSlot = null;
 if (!kind) {
   for (const s of slots) {
     if (now.minutes < s) continue;
     const key = hhmm(s);
     if (state.sentToday.indexOf(key) >= 0) continue;
-    if (now.minutes - s > cfg.staleMinutes) { state.sentToday.push(key); continue; }
+    if (now.minutes - s > cfg.staleMinutes) {
+      // 超出正常发送窗口，但在补发窗口内 → 记为候选（取最近的一个）
+      if (now.minutes - s <= cfg.catchupMinutes) catchupSlot = s;
+      state.sentToday.push(key);
+      continue;
+    }
     state.sentToday.push(key);
     kind = 'greet';
     break;
   }
+}
+
+if (!kind && catchupSlot !== null) {
+  kind = 'greet';
+  console.log('[' + now.hm + '] 补发错过的一条（原定 ' + hhmm(catchupSlot) + '）');
 }
 
 if (!kind && cfg.forceNow) {
