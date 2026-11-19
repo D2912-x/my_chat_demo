@@ -158,6 +158,90 @@
         }
     }
 
+    // ===== 联网搜索 =====
+    function searchCfg() {
+        return {
+            mode: localStorage.getItem('chat.search.mode') || 'off',
+            key: localStorage.getItem('chat.search.key') || ''
+        };
+    }
+
+    function webSearchOn() { return localStorage.getItem('chat.search.on') === '1'; }
+
+    function toggleWebSearch() {
+        if (searchCfg().mode === 'off') { toast('先去 API 设置里选择联网搜索方式'); return; }
+        const on = !webSearchOn();
+        localStorage.setItem('chat.search.on', on ? '1' : '0');
+        renderSearchBtn();
+        toast(on ? '联网搜索：开' : '联网搜索：关');
+    }
+
+    function renderSearchBtn() {
+        const b = document.getElementById('searchBtn');
+        if (!b) return;
+        const c = searchCfg();
+        const usable = c.mode !== 'off';
+        b.classList.toggle('active', usable && webSearchOn());
+        b.style.opacity = usable ? '1' : '0.55';
+        b.title = usable ? '联网搜索' : '先在 API 设置里选择搜索方式';
+    }
+
+    async function wikiSearch(query) {
+        const lang = 'zh';
+        const url = 'https://' + lang + '.wikipedia.org/w/api.php?action=query&list=search&srsearch=' +
+            encodeURIComponent(String(query).slice(0, 200)) + '&format=json&origin=*&srlimit=3';
+        const res = await fetchT(url, 8000);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const items = (data && data.query && data.query.search) || [];
+        if (!items.length) return '';
+        let text = '【维基百科搜索结果】（参考以下资料，能引用就引用）\n';
+        items.forEach(function (it, i) {
+            const snip = String(it.snippet || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').slice(0, 200);
+            text += (i + 1) + '. ' + it.title + '：' + snip + '\n';
+        });
+        return text;
+    }
+
+    async function tavilySearch(query) {
+        const c = searchCfg();
+        if (!c.key) throw new Error('没填 Tavily Key');
+        const res = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                api_key: c.key,
+                query: String(query).slice(0, 400),
+                search_depth: 'basic',
+                max_results: 4,
+                include_answer: false
+            })
+        });
+        if (!res.ok) throw new Error('搜索 HTTP ' + res.status);
+        const data = await res.json();
+        const rows = (Array.isArray(data && data.results) ? data.results : []).slice(0, 4);
+        if (!rows.length) return '';
+        let text = '【联网搜索结果】（基于这些资料回答，结尾列出用到的链接）\n';
+        rows.forEach(function (r, i) {
+            const snip = String(r.content || '').replace(/\s+/g, ' ').slice(0, 280);
+            text += (i + 1) + '. ' + r.title + '\n   ' + snip + '\n   来源：' + (r.url || '') + '\n';
+        });
+        return text;
+    }
+
+    async function prepareSearch(query) {
+        const c = searchCfg();
+        if (!webSearchOn() || c.mode === 'off' || c.mode === 'native') return '';
+        try {
+            if (c.mode === 'wiki') return await wikiSearch(query);
+            if (c.mode === 'tavily') return await tavilySearch(query);
+            return '';
+        } catch (e) {
+            toast('联网搜索失败：' + e.message);
+            return '';
+        }
+    }
+
     // 【J07】主动消息（解密/合并）
     function b64ToBytes(b64) {
         const bin = atob(b64);
@@ -333,6 +417,19 @@
         el.textContent = (extra ? extra + ' · ' : '') + (c.token ? 'Token 已填' : 'Token 未填') + ' · ' + (c.repo || '未填仓库');
     }
 
+    // 把角色卡 + 补充设定拼成一段人设文本
+    function personaOf(s) {
+        if (!s) return '';
+        const c = s.card || {};
+        const parts = [];
+        if (c.who) parts.push('身份：' + c.who);
+        if (c.style) parts.push('说话方式：' + c.style);
+        if (c.sample) parts.push('示例台词：\n' + c.sample);
+        if (c.ban) parts.push('禁止：' + c.ban);
+        if (s.systemPrompt) parts.push('补充设定：\n' + s.systemPrompt);
+        return parts.join('\n').trim();
+    }
+
     function collectProfilePayload() {
         const sid = document.getElementById('provSessionSel').value;
         const s = sessions.find(function (x) { return x.id === sid; }) || getCurrent();
@@ -345,7 +442,7 @@
         return {
             version: 1,
             name: (document.getElementById('profNameInp').value || '').trim(),
-            persona: s ? String(s.systemPrompt || '').trim() : '',
+            persona: s ? personaOf(s) : '',
             city: currentCity(),
             anniversaries: anns.slice(0, 30)
         };
@@ -379,10 +476,11 @@
         sessions.forEach(function (s) {
             const o = document.createElement('option');
             o.value = s.id;
-            o.textContent = s.name + (s.systemPrompt ? '' : '（未设人设）');
+            o.textContent = s.name + ((s.card && (s.card.who || s.card.style) || s.systemPrompt) ? '' : '（未设人设）');
             sel.appendChild(o);
         });
-        sel.value = currentId;
+        const savedProv = localStorage.getItem('chat.notify.provSession') || '';
+        sel.value = (savedProv && sessions.some(function (x) { return x.id === savedProv; })) ? savedProv : currentId;
 
         const tsel = document.getElementById('provTargetSel');
         if (!tsel) return;

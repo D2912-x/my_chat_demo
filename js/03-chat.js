@@ -24,6 +24,7 @@
         renderMemSwitch();
         bindTimeMode();
         applyUiSettings();
+        if (typeof renderSearchBtn === 'function') renderSearchBtn();
         pullProactive(false);
         // 每 3 分钟检查一次；页面在后台时不查，省流量和电
         setInterval(function () { if (!document.hidden) pullProactive(false); }, 3 * 60 * 1000);
@@ -1169,6 +1170,22 @@
                 payloadMsgs.unshift({ role: "system", content: sysContent });
             }
 
+            // 联网搜索（如果开着）
+            try {
+                const _sCfg = (typeof searchCfg === 'function') ? searchCfg() : { mode: 'off' };
+                const _on = (typeof webSearchOn === 'function') ? webSearchOn() : false;
+                if (_on && _sCfg.mode === 'native') {
+                    bodyObj.tools = [{ type: 'web_search' }];
+                } else if (_on && (_sCfg.mode === 'wiki' || _sCfg.mode === 'tavily')) {
+                    const lastUser = [...payloadMsgs].reverse().filter(function (m) { return m.role === 'user'; })[0];
+                    const q = lastUser ? String(lastUser.content || '') : '';
+                    if (q) {
+                        const sr = await prepareSearch(q);
+                        if (sr && lastUser) lastUser.content = String(lastUser.content) + '\n\n' + sr;
+                    }
+                }
+            } catch (e) { }
+
             // 动态信息（时间/天气/距上次对话/记忆提醒）放在最后，保护前缀缓存
             try {
                 const dyn = dynamicNote(s);
@@ -1292,6 +1309,10 @@
         document.getElementById('cfgTopP').value = (typeof cfg.top_p === 'number') ? cfg.top_p : '';
         const mt = document.getElementById('cfgMaxTokens');
         if (mt) mt.value = (typeof cfg.max_tokens === 'number') ? cfg.max_tokens : 2048;
+        const sm = document.getElementById('cfgSearchMode');
+        if (sm) sm.value = localStorage.getItem('chat.search.mode') || 'off';
+        const sk = document.getElementById('cfgSearchKey');
+        if (sk) sk.value = localStorage.getItem('chat.search.key') || '';
     }
     function openSettings() { showSettingsPanel('api'); }
     function closeSettings() { showSettingsPanel('hub'); }
@@ -1360,6 +1381,11 @@
         if (Number.isFinite(topP)) cfg.top_p = Math.min(1, Math.max(0, topP));
         const mtv = parseInt(document.getElementById('cfgMaxTokens').value, 10);
         cfg.max_tokens = Number.isFinite(mtv) ? Math.min(8192, Math.max(128, mtv)) : 2048;
+        const smEl = document.getElementById('cfgSearchMode');
+        const skEl = document.getElementById('cfgSearchKey');
+        if (smEl) localStorage.setItem('chat.search.mode', smEl.value || 'off');
+        if (skEl) localStorage.setItem('chat.search.key', String(skEl.value || '').trim());
+        if (typeof renderSearchBtn === 'function') renderSearchBtn();
         DB.set('chat.cfg', cfg);
         showSettingsPanel('hub');
         toast('已保存');
@@ -1389,18 +1415,41 @@
     });
 
     // 手机键盘弹出时，用 visualViewport 校准布局高度
+    function scrollMsgsToBottom() {
+        const box = document.getElementById('msgs');
+        if (!box) return;
+        box.scrollTop = box.scrollHeight;
+    }
+
     function fitViewport() {
         const vv = window.visualViewport;
         const h = (vv && vv.height) ? vv.height : window.innerHeight;
         if (h) document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
+        // 高度变了以后，把最后几条消息顶到可见区域底部
+        requestAnimationFrame(scrollMsgsToBottom);
     }
-    window.addEventListener('resize', fitViewport);
+
+    // 键盘弹出/收起会触发多次 resize，这里多补几次，覆盖键盘动画
+    function fitViewportSoon() {
+        fitViewport();
+        setTimeout(fitViewport, 120);
+        setTimeout(fitViewport, 300);
+    }
+
+    window.addEventListener('resize', fitViewportSoon);
     window.addEventListener('orientationchange', function () { setTimeout(fitViewport, 120); });
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', fitViewport);
+        window.visualViewport.addEventListener('resize', fitViewportSoon);
         window.visualViewport.addEventListener('scroll', fitViewport);
     }
     fitViewport();
+
+    // 输入框聚焦（键盘即将弹出）与失焦（键盘收起）时也校准一次
+    const _inp = document.getElementById('input');
+    if (_inp) {
+        _inp.addEventListener('focus', function () { setTimeout(fitViewportSoon, 60); });
+        _inp.addEventListener('blur', function () { setTimeout(fitViewportSoon, 60); });
+    }
 
     init();
 

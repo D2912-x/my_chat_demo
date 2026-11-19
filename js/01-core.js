@@ -156,8 +156,6 @@
         if (hm) hm.value = avGet('chat.color.me');
         const ha = document.getElementById('hexAi');
         if (ha) ha.value = avGet('chat.color.ai');
-        document.getElementById('colMe').value = avGet('chat.color.me') || '#f8dfe7';
-        document.getElementById('colAi').value = avGet('chat.color.ai') || '#eef0f2';
         buildAllSwatches();
         markAvatarSwatches();
         markSwatches();
@@ -168,8 +166,16 @@
         localStorage.setItem('chat.anim.on', document.getElementById('uiAnimOn').checked ? '1' : '0');
         localStorage.setItem('chat.avatar.meText', String(document.getElementById('avMeText').value || '').trim().slice(0, 2));
         localStorage.setItem('chat.avatar.aiText', String(document.getElementById('avAiText').value || '').trim().slice(0, 2));
-        const me = document.getElementById('colMe').value;
-        const ai = document.getElementById('colAi').value;
+        const _norm = function (v) {
+            let s = String(v || '').trim();
+            if (!s) return '';
+            if (s.charAt(0) !== '#') s = '#' + s;
+            return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : '';
+        };
+        const _hm = document.getElementById('hexMe');
+        const _ha = document.getElementById('hexAi');
+        const me = _norm(_hm && _hm.value);
+        const ai = _norm(_ha && _ha.value);
         if (me) localStorage.setItem('chat.color.me', me);
         if (ai) localStorage.setItem('chat.color.ai', ai);
         applyUiSettings();

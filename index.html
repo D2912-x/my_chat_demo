@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>My Chat</title>
-    <link rel="stylesheet" href="style.css?v10">
+    <link rel="stylesheet" href="style.css?v15">
 </head>
 <body>
 
@@ -47,6 +47,7 @@
                     <div class="left-actions">
                         <input type="file" id="fileInput" style="display:none" accept="image/*, .txt, .md, .json, .csv, .py, .js, .html, .css">
                         <button id="thinkBtn" class="think-btn" onclick="toggleThink()">深度思考</button>
+                        <button id="searchBtn" class="think-btn" onclick="toggleWebSearch()">联网</button>
                         <button id="memBtn" class="think-btn" onclick="toggleMemory()">记忆 开</button>
                     </div>
                     <div class="right-actions">
@@ -125,11 +126,9 @@
         <div class="sw-row" id="swAvAi"></div>
 
         <label>我的气泡颜色</label>
-        <input type="color" id="colMe" onchange="saveUiSettings()">
         <div class="sw-row" id="swMe"><button type="button" class="sw" data-c="#f4ecdf" style="background:#f4ecdf" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f5dfe3" style="background:#f5dfe3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e2ece2" style="background:#e2ece2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#dfe8f2" style="background:#dfe8f2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f2e4d8" style="background:#f2e4d8" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e9e2ef" style="background:#e9e2ef" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f8f0e2" style="background:#f8f0e2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#f0e2e2" style="background:#f0e2e2" onclick="setBubbleColor(this)"></button></div>
         <div class="hex-row"><input id="hexMe" placeholder="#f8dfe7"><button type="button" class="mem-btn" onclick="applyHexColor('me')">应用</button></div>
         <label>AI 气泡颜色</label>
-        <input type="color" id="colAi" onchange="saveUiSettings()">
         <div class="sw-row" id="swAi"><button type="button" class="sw" data-c="#eeebe6" style="background:#eeebe6" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#ece8ee" style="background:#ece8ee" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#eceee9" style="background:#eceee9" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e9eef3" style="background:#e9eef3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#efeae3" style="background:#efeae3" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#eceaee" style="background:#eceaee" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#e8e6e2" style="background:#e8e6e2" onclick="setBubbleColor(this)"></button><button type="button" class="sw" data-c="#ebe7e2" style="background:#ebe7e2" onclick="setBubbleColor(this)"></button></div>
         <div class="hex-row"><input id="hexAi" placeholder="#eef0f2"><button type="button" class="mem-btn" onclick="applyHexColor('ai')">应用</button></div>
         <div style="font-size:12px; color:#aaa; margin-top:6px;">点圆点换色；取色器部分手机打不开，可在输入框填 #RRGGBB 后点应用。</div>
@@ -207,6 +206,16 @@
         <input id="cfgTopP" type="number" min="0" max="1" step="0.05" placeholder="1">
         <label>最大输出 tokens（防止无限生成，建议 2048）</label>
         <input id="cfgMaxTokens" type="number" min="128" max="8192" step="128" placeholder="2048">
+        <label>联网搜索方式</label>
+        <select id="cfgSearchMode">
+            <option value="off">关闭</option>
+            <option value="native">服务商自带搜索（不一定支持）</option>
+            <option value="wiki">维基百科（免注册，仅百科类）</option>
+            <option value="tavily">Tavily（需要 Key）</option>
+        </select>
+        <label>Tavily API Key（选 Tavily 时填）</label>
+        <input id="cfgSearchKey" type="password" placeholder="tvly-...">
+        <div style="font-size:12px; color:#aaa; margin-top:4px;">Tavily 免费额度 1000 次/月，注册地址 tavily.com</div>
         <div class="modal-row">
             <button class="btn-cancel" onclick="closeSettings()">取消</button>
             <button class="btn-save" onclick="saveSettings()">保存</button>
@@ -444,9 +453,9 @@
     });
 </script>
 <!-- 拆分后的脚本：顺序不能变 -->
-    <script src="js/01-core.js?v10"></script>
-    <script src="js/02-features.js?v10"></script>
-    <script src="js/03-chat.js?v10"></script>
-    <script src="js/04-moments.js?v10"></script>
+    <script src="js/01-core.js?v15"></script>
+    <script src="js/02-features.js?v15"></script>
+    <script src="js/03-chat.js?v15"></script>
+    <script src="js/04-moments.js?v15"></script>
 </body>
 </html>
