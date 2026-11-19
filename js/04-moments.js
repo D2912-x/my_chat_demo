@@ -310,10 +310,10 @@ async function addMomentComment(postId, text) {
     renderMoments();
 
     const author = (sessions || []).filter(function (s) { return s.id === p.by; })[0];
-    if (!author) return;
+    if (!author) { toast('找不到这条动态的作者，无法自动回复'); return; }
     try {
         const api = apiOf(author);
-        if (!api.key) return;
+        if (!api.key) { toast('「' + author.name + '」没配置 API Key，无法回复'); return; }
         const sys = '你是「' + author.name + '」。' + momPersonaText(author)
             + '\n有人在你的朋友圈动态下评论了。像微信里那样随口回一句：不超过 15 字，不要客套，不提 AI，不加引号，只输出这句话。';
         const res = await fetch(api.url, {
@@ -339,7 +339,9 @@ async function addMomentComment(postId, text) {
         p2.comments.push({ byName: p2.byName, text: rp, at: Date.now() });
         saveMoments(d2);
         renderMoments();
-    } catch (e) { }
+    } catch (e) {
+        toast('「' + author.name + '」回复失败：' + (e && e.message ? e.message : '网络问题'));
+    }
 }
 
 function openCircleEditor(isNew) {
