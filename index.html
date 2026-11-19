@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>My Chat</title>
-    <link rel="stylesheet" href="style.css?v15">
+    <link rel="stylesheet" href="style.css?v16">
 </head>
 <body>
 
@@ -30,6 +30,7 @@
         <div id="top">
             <button class="icon-btn" id="menu-btn" onclick="toggleSidebar()">☰</button>
             <div id="title">新对话</div>
+            <button class="icon-btn" onclick="refreshNow()" title="刷新（拉取新消息）">↻</button>
             <button class="icon-btn" onclick="openMoments()" title="朋友圈">◎</button>
             <button class="icon-btn" onclick="openSettingsHub()">❋</button>
         </div>
@@ -453,9 +454,9 @@
     });
 </script>
 <!-- 拆分后的脚本：顺序不能变 -->
-    <script src="js/01-core.js?v15"></script>
-    <script src="js/02-features.js?v15"></script>
-    <script src="js/03-chat.js?v15"></script>
-    <script src="js/04-moments.js?v15"></script>
+    <script src="js/01-core.js?v16"></script>
+    <script src="js/02-features.js?v16"></script>
+    <script src="js/03-chat.js?v16"></script>
+    <script src="js/04-moments.js?v16"></script>
 </body>
 </html>

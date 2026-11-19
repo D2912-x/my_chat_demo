@@ -281,6 +281,15 @@
         localStorage.setItem('chat.notify.seen', JSON.stringify([...set].slice(-500)));
     }
 
+    async function refreshNow() {
+        toast('正在刷新…');
+        try {
+            await pullProactive(false);
+            if (typeof renderChat === 'function') renderChat();
+            if (typeof renderSidebar === 'function') renderSidebar();
+        } catch (e) { }
+    }
+
     async function pullProactive(manual) {
         const pwd = localStorage.getItem('chat.notify.pwd') || '';
         if (!pwd) { if (manual) toast('请先在上方填写解密密码并保存'); return; }
@@ -329,6 +338,7 @@
                 if (s.id === currentId && !isGenerating) renderChat();
                 notifySeenAdd(pulledTs);
                 if (s.id !== currentId) s.unread = (Number(s.unread) || 0) + added;
+                else s.unread = 0;
                 if (!manual) {
                     unreadNotify += added;
                     updateTitleBadge();
