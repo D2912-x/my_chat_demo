@@ -44,18 +44,38 @@
         if (window.innerWidth < 768 && document.getElementById('sidebar').classList.contains('on')) toggleSidebar();
     }
 
+    let storageWarningShown = false;
+    function warnStorageFailure(err) {
+        console.warn('保存失败：localStorage 空间不足', err);
+        if (storageWarningShown) return;
+        storageWarningShown = true;
+        toast('本地存储空间不足，最新修改可能没有保存。请先导出聊天并删除不需要的图片或长对话。');
+        setTimeout(function () { storageWarningShown = false; }, 30000);
+    }
+
     function saveData() {
+        let saved = false;
         try {
             DB.set('chat.sessions', sessions);
+            saved = true;
         } catch (e) {
             // 存储写满时先丢掉全部推理内容再试一次，优先保住聊天正文
             sessions.forEach(function (x) {
                 (x.messages || []).forEach(function (m) { if (m.reasoning) delete m.reasoning; });
             });
-            try { DB.set('chat.sessions', sessions); }
-            catch (e2) { console.warn('保存失败：localStorage 空间不足', e2); }
+            try {
+                DB.set('chat.sessions', sessions);
+                saved = true;
+            } catch (e2) {
+                warnStorageFailure(e2);
+            }
         }
-        localStorage.setItem('chat.cur', currentId);
+        try {
+            localStorage.setItem('chat.cur', currentId);
+        } catch (e) {
+            warnStorageFailure(e);
+        }
+        return saved;
     }
 
     function getCurrent() { return sessions.find(s => s.id === currentId); }
@@ -348,6 +368,8 @@
         if (_sa) _sa.value = _c.sample || '';
         const _bn = document.getElementById('cardBanInp');
         if (_bn) _bn.value = _c.ban || '';
+        const _ex = document.getElementById('cardExtraInp');
+        if (_ex) _ex.value = _c.extra || '';
         const mem = memEnsure(s);
         document.getElementById('memSummaryInp').value = mem.summary || '';
         document.getElementById('memEventsInp').value = memToText(s);
@@ -368,6 +390,12 @@
     function saveSessionSettings() {
         const s = getCurrent();
         if (!s) return;
+        const useOwnApi = document.getElementById('useOwnApiInp').checked;
+        const ownApiUrl = document.getElementById('sessionUrlInp').value.trim();
+        if (useOwnApi && ownApiUrl) {
+            try { assertSafeApiUrl(ownApiUrl); }
+            catch (e) { toast(e.message); return; }
+        }
         const newName = document.getElementById('sessionNameInp').value.trim();
         if (newName) s.name = newName;
         s.systemPrompt = document.getElementById('sessionPromptInp').value.trim();
@@ -379,9 +407,10 @@
             who: _gv('cardWhoInp', 80),
             style: _gv('cardStyleInp', 120),
             sample: _gv('cardSampleInp', 400),
-            ban: _gv('cardBanInp', 120)
+            ban: _gv('cardBanInp', 120),
+            extra: _gv('cardExtraInp', 800)
         };
-        if (card.who || card.style || card.sample || card.ban) s.card = card;
+        if (card.who || card.style || card.sample || card.ban || card.extra) s.card = card;
         else delete s.card;
         const _m1 = document.getElementById('sessAvMeText');
         const _m2 = document.getElementById('sessAvAiText');
@@ -403,9 +432,9 @@
         if (tsel) s.timeMode = tsel.value;
         if (s.timeMode === 'story' && typeof s.storyOffset !== 'number') s.storyOffset = 0;
         saveProfile();
-        s.useOwnApi = document.getElementById('useOwnApiInp').checked;
+        s.useOwnApi = useOwnApi;
         s.model = document.getElementById('sessionModelInp').value.trim();
-        s.url = document.getElementById('sessionUrlInp').value.trim();
+        s.url = ownApiUrl;
         s.key = document.getElementById('sessionKeyInp').value.trim();
         saveData(); renderSidebar(); renderChat(); closeSessionSettings();
     }
@@ -606,11 +635,11 @@
                 const parts = splitBubbles(m.content);
                 parts.forEach(function (pt, pi) {
                     const grouped = (lastRole === 'assistant') || pi > 0;
-                    addBubble('ai', pt, pi === 0 ? m.display : '', undefined, index, 'assistant', '', pi === 0 ? m.reasoning : '', m.ts, grouped);
+                    addBubble('ai', pt, pi === 0 ? m.display : '', undefined, index, 'assistant', '', pi === 0 ? m.reasoning : '', m.ts, grouped, pi === 0 ? m.searchSources : null);
                 });
                 lastRole = 'assistant';
             } else {
-                addBubble('me', m.content, m.display, m.image, index, m.role, m.fileName, m.reasoning, m.ts, false);
+                addBubble('me', m.content, m.display, m.image, index, m.role, m.fileName, m.reasoning, m.ts, false, null);
                 lastRole = 'user';
             }
             if (m.ts) prevTs = m.ts;
@@ -801,7 +830,37 @@
         el.classList.add('enter');
     }
 
-    function addBubble(cls, content, displayText, imageBase64, index, role, fileName, reasoning, ts) {
+    function appendSearchSources(container, sources) {
+        if (!container || !Array.isArray(sources) || !sources.length) return;
+        const valid = sources.map(function (source) {
+            try {
+                const url = new URL(String(source && source.url || ''));
+                if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+                return { title: String(source && source.title || url.hostname).slice(0, 120), url: url.href };
+            } catch (e) {
+                return null;
+            }
+        }).filter(Boolean);
+        if (!valid.length) return;
+
+        const box = document.createElement('div');
+        box.className = 'search-sources';
+        const title = document.createElement('div');
+        title.className = 'search-sources-title';
+        title.textContent = '联网来源（' + valid.length + '）';
+        box.appendChild(title);
+        valid.forEach(function (source, index) {
+            const a = document.createElement('a');
+            a.href = source.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = (index + 1) + '. ' + source.title;
+            box.appendChild(a);
+        });
+        container.appendChild(box);
+    }
+
+    function addBubble(cls, content, displayText, imageBase64, index, role, fileName, reasoning, ts, grouped, searchSources) {
         const wrap = document.createElement('div');
         wrap.className = `msg-wrap ${cls}`;
         
@@ -814,6 +873,7 @@
         } else {
             d.classList.add('md-body');
             d.innerHTML = renderMarkdown(textToShow);
+            appendSearchSources(d, searchSources);
         }
         if (fileName) {
             const chip = document.createElement('div');
@@ -856,7 +916,7 @@
             wrap.appendChild(av);
             wrap.appendChild(d);
         }
-        if (arguments[9]) wrap.classList.add('grouped');
+        if (grouped) wrap.classList.add('grouped');
         attachLongPress(wrap, index);
         const msgsEl = document.getElementById('msgs');
         msgsEl.appendChild(wrap);
@@ -1057,11 +1117,18 @@
         const s = getCurrent();
         const _api = apiOf(s);
         const actualModel = _api.model;
-        const actualUrl = _api.url;
         const actualKey = _api.key;
 
         if (!actualKey) {
             toast('请先填写 API Key'); openSettings(); return;
+        }
+        let actualUrl;
+        try {
+            actualUrl = assertSafeApiUrl(_api.url);
+        } catch (e) {
+            toast(e.message);
+            openSettings();
+            return;
         }
 
         let userContent = '';
@@ -1160,6 +1227,9 @@
         try {
             try { await refreshWeather(); } catch (e) { }
             const payloadMsgs = s.messages.slice(-30).map(m => ({ role: m.role, content: m.content }));
+            const bodyObj = { model: actualModel, messages: payloadMsgs, stream: true };
+            let searchMeta = null;
+            let searchUser = null;
             
             // 把固定人设和长期记忆拼接起来
             let sysContent = buildSystemPrompt(s);
@@ -1175,16 +1245,34 @@
                 const _sCfg = (typeof searchCfg === 'function') ? searchCfg() : { mode: 'off' };
                 const _on = (typeof webSearchOn === 'function') ? webSearchOn() : false;
                 if (_on && _sCfg.mode === 'native') {
-                    bodyObj.tools = [{ type: 'web_search' }];
+                    searchUser = [...payloadMsgs].reverse().filter(function (m) { return m.role === 'user'; })[0];
+                    bodyObj.web_search_options = {};
+                    searchMeta = {
+                        mode: 'native',
+                        query: searchUser ? messageTextContent(searchUser.content).trim() : '',
+                        sources: []
+                    };
                 } else if (_on && (_sCfg.mode === 'wiki' || _sCfg.mode === 'tavily')) {
                     const lastUser = [...payloadMsgs].reverse().filter(function (m) { return m.role === 'user'; })[0];
-                    const q = lastUser ? String(lastUser.content || '') : '';
+                    const q = lastUser ? messageTextContent(lastUser.content).trim() : '';
                     if (q) {
+                        searchUser = lastUser;
+                        toast('正在联网检索…');
                         const sr = await prepareSearch(q);
-                        if (sr && lastUser) lastUser.content = String(lastUser.content) + '\n\n' + sr;
+                        if (sr && sr.text && lastUser) {
+                            lastUser.content = appendTextContent(lastUser.content, '\n\n' + sr.text);
+                            searchMeta = { mode: _sCfg.mode, query: q, sources: sr.sources || [] };
+                            toast(searchMeta.sources.length
+                                ? '已获取 ' + searchMeta.sources.length + ' 条联网资料'
+                                : '已获取联网资料');
+                        } else if (!sr) {
+                            toast('联网检索没有返回可用资料，本次按普通对话回答');
+                        }
                     }
                 }
-            } catch (e) { }
+            } catch (e) {
+                toast('联网搜索初始化失败：' + (e && e.message ? e.message : '未知错误'));
+            }
 
             // 动态信息（时间/天气/距上次对话/记忆提醒）放在最后，保护前缀缓存
             try {
@@ -1192,26 +1280,54 @@
                 if (dyn && payloadMsgs.length) {
                     const last = payloadMsgs[payloadMsgs.length - 1];
                     if (last.role === 'user') {
-                        last.content = String(last.content == null ? '' : last.content) + '\n\n' + dyn;
+                        last.content = appendTextContent(last.content, '\n\n' + dyn);
                     } else {
                         payloadMsgs.push({ role: 'user', content: dyn });
                     }
                 }
             } catch (e) { }
 
-            const bodyObj = { model: actualModel, messages: payloadMsgs, stream: true };
             bodyObj.max_tokens = (typeof cfg.max_tokens === 'number') ? cfg.max_tokens : 2048;
             if (typeof cfg.temperature === 'number') bodyObj.temperature = cfg.temperature;
             if (typeof cfg.top_p === 'number') bodyObj.top_p = cfg.top_p;
             if (isDeepThink) bodyObj.thinking = { type: "enabled" };
             else bodyObj.thinking = { type: "disabled" };
 
-            const res = await fetch(actualUrl, {
+            let res = await fetch(actualUrl, {
                 method:'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + actualKey },
                 body: JSON.stringify(bodyObj),
                 signal: currentAbortController.signal
             });
+            if (!res.ok && searchMeta && searchMeta.mode === 'native' && searchUser &&
+                (res.status === 400 || res.status === 422) && searchMeta.query) {
+                const nativeError = await res.text();
+                try {
+                    toast('服务商不支持原生搜索，正在自动切换联网方式…');
+                    const sr = await fallbackSearch(searchMeta.query);
+                    if (!sr || !sr.text) throw new Error('没有返回可用资料');
+                    searchUser.content = appendTextContent(searchUser.content, '\n\n' + sr.text);
+                    searchMeta = {
+                        mode: searchCfg().key ? 'tavily' : 'wiki',
+                        query: searchMeta.query,
+                        sources: sr.sources || []
+                    };
+                    delete bodyObj.web_search_options;
+                    res = await fetch(actualUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + actualKey },
+                        body: JSON.stringify(bodyObj),
+                        signal: currentAbortController.signal
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + await res.text());
+                    toast(searchMeta.sources.length
+                        ? '已自动切换联网方式，并获取 ' + searchMeta.sources.length + ' 条资料'
+                        : '已自动切换联网方式');
+                } catch (e) {
+                    throw new Error('原生搜索不可用，自动降级也失败：' + e.message + '（原始错误：' +
+                        nativeError.slice(0, 200) + '）');
+                }
+            }
             if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + await res.text());
 
             const reader = res.body.getReader();
@@ -1256,6 +1372,9 @@
 
             if (full) {
                 paintSegments();
+                if (searchMeta && searchMeta.sources && searchMeta.sources.length) {
+                    appendSearchSources(d, searchMeta.sources);
+                }
                 if (isDeepThink && !fullReasoning) {
                     const hint = document.createElement('div');
                     hint.className = 'no-reason-hint';
@@ -1268,7 +1387,14 @@
                     warn.textContent = '这句可能出戏了，可长按重新生成';
                     d.appendChild(warn);
                 }
-                s.messages.push({ role:'assistant', content: full, reasoning: fullReasoning || null, ts: Date.now() });
+                s.messages.push({
+                    role: 'assistant',
+                    content: full,
+                    reasoning: fullReasoning || null,
+                    searchSources: searchMeta && searchMeta.sources ? searchMeta.sources : null,
+                    searchQuery: searchMeta ? searchMeta.query : null,
+                    ts: Date.now()
+                });
                 trimReasonings(s);
                 s.updatedAt = Date.now(); saveData();
                 animateLastBubble();
@@ -1329,10 +1455,17 @@
         const urlInp = document.getElementById('cfgUrl');
         const keyInp = document.getElementById('cfgKey');
         if (!box) return;
-        const base = modelsUrlOf(urlInp ? urlInp.value : '');
+        let base = '';
+        try {
+            base = assertSafeApiUrl(modelsUrlOf(urlInp ? urlInp.value : ''));
+        } catch (e) {
+            box.textContent = e.message;
+            box.className = 'model-list ml-err';
+            return;
+        }
         const key = String((keyInp && keyInp.value) || '').trim();
-        if (!base) { box.innerHTML = '<span class="ml-err">请先填接口地址</span>'; return; }
         if (!key) { box.innerHTML = '<span class="ml-err">请先填 API Key</span>'; return; }
+        box.className = 'model-list';
         box.innerHTML = '<span class="ml-tip">查询中…</span>';
         try {
             const res = await fetchT(base, 8000, { headers: { 'Authorization': 'Bearer ' + key } });
@@ -1369,7 +1502,10 @@
     function saveSettings() {
         const temp = parseFloat(document.getElementById('cfgTemp').value);
         const topP = parseFloat(document.getElementById('cfgTopP').value);
-        cfg = { url: document.getElementById('cfgUrl').value.trim(), key: document.getElementById('cfgKey').value.trim(), model: document.getElementById('cfgModel').value.trim() };
+        const nextUrl = document.getElementById('cfgUrl').value.trim();
+        try { assertSafeApiUrl(nextUrl); }
+        catch (e) { toast(e.message); return; }
+        cfg = { url: nextUrl, key: document.getElementById('cfgKey').value.trim(), model: document.getElementById('cfgModel').value.trim() };
         if (Number.isFinite(temp) && temp > 1.6) {
             toast('温度太高（>1.6）会让回复语义崩坏，已取消保存');
             return;
@@ -1445,7 +1581,7 @@
     fitViewport();
 
     // 输入框聚焦（键盘即将弹出）与失焦（键盘收起）时也校准一次
-    const _inp = document.getElementById('input');
+    const _inp = document.getElementById('inp');
     if (_inp) {
         _inp.addEventListener('focus', function () { setTimeout(fitViewportSoon, 60); });
         _inp.addEventListener('blur', function () { setTimeout(fitViewportSoon, 60); });

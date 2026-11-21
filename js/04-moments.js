@@ -218,6 +218,7 @@ function momPersonaText(s) {
     if (card.style) parts.push('说话方式：' + card.style);
     if (card.sample) parts.push('示例：' + card.sample);
     if (card.ban) parts.push('禁止：' + card.ban);
+    if (card.extra) parts.push('其他：' + String(card.extra).slice(0, 120));
     if (!parts.length && s && s.systemPrompt) parts.push(String(s.systemPrompt).slice(0, 300));
     return parts.join('\n') || ('名字：' + (s ? s.name : 'AI'));
 }
@@ -225,6 +226,7 @@ function momPersonaText(s) {
 async function momMakePost(circle, who, others, minutes) {
     const api = apiOf(who);
     if (!api.key) throw new Error('该对话没配置 API Key');
+    const endpoint = assertSafeApiUrl(api.url);
     const t = new Date();
     t.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
     const timeStr = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
@@ -247,7 +249,7 @@ async function momMakePost(circle, who, others, minutes) {
             : '')
         + '只输出 JSON：{"text":"动态内容","comments":[{"who":"评论者名","text":"评论"}]}';
 
-    const res = await fetch(api.url, {
+    const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
         body: JSON.stringify({
@@ -314,9 +316,10 @@ async function addMomentComment(postId, text) {
     try {
         const api = apiOf(author);
         if (!api.key) { toast('「' + author.name + '」没配置 API Key，无法回复'); return; }
+        const endpoint = assertSafeApiUrl(api.url);
         const sys = '你是「' + author.name + '」。' + momPersonaText(author)
             + '\n有人在你的朋友圈动态下评论了。像微信里那样随口回一句：不超过 15 字，不要客套，不提 AI，不加引号，只输出这句话。';
-        const res = await fetch(api.url, {
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
             body: JSON.stringify({

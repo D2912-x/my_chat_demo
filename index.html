@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>My Chat</title>
-    <link rel="stylesheet" href="style.css?v18">
+    <link rel="stylesheet" href="style.css?v21">
 </head>
 <body>
 
@@ -210,13 +210,13 @@
         <label>联网搜索方式</label>
         <select id="cfgSearchMode">
             <option value="off">关闭</option>
-            <option value="native">服务商自带搜索（不一定支持）</option>
+            <option value="native">服务商原生搜索（仅特定模型，可能不支持）</option>
             <option value="wiki">维基百科（免注册，仅百科类）</option>
-            <option value="tavily">Tavily（需要 Key）</option>
+            <option value="tavily">Tavily（需要 Key，适合新闻和通用网页）</option>
         </select>
         <label>Tavily API Key（选 Tavily 时填）</label>
         <input id="cfgSearchKey" type="password" placeholder="tvly-...">
-        <div style="font-size:12px; color:#aaa; margin-top:4px;">Tavily 免费额度 1000 次/月，注册地址 tavily.com</div>
+        <div style="font-size:12px; color:#aaa; margin-top:4px;">DeepSeek API 通常不支持“原生搜索”；通用网页搜索请选 Tavily，维基模式仅适合百科类问题。Tavily 注册地址 tavily.com</div>
         <div class="modal-row">
             <button class="btn-cancel" onclick="closeSettings()">取消</button>
             <button class="btn-save" onclick="saveSettings()">保存</button>
@@ -235,7 +235,7 @@
         <label>对话名字</label>
         <input id="sessionNameInp">
         <div class="mem-actions" style="margin-top:12px;">
-            <button type="button" class="mem-btn" onclick="toggleCardBox()">角色卡（身份 / 说话方式 / 示例 / 禁止）</button>
+            <button type="button" class="mem-btn" onclick="toggleCardBox()">角色卡（身份 / 说话方式 / 示例 / 禁止 / 其他）</button>
         </div>
         <div id="cardBox" style="display:none; margin-top:6px;">
             <label>身份（一句话：他是谁）</label>
@@ -249,6 +249,9 @@
 
             <label>禁止（可选）</label>
             <input id="cardBanInp" placeholder="如 不说「作为AI」，不主动卖萌">
+
+            <label>其他补充（可选：发生过的事 / 背景 / 关系）</label>
+            <textarea id="cardExtraInp" placeholder="如 上个月一起去过海边；她知道我讨厌下雨天" style="height:64px; resize:none;"></textarea>
 
             <label>补充设定（可选，旧的整段人设放这里）</label>
             <textarea id="sessionPromptInp" placeholder="可以留空" style="height:64px; resize:none;"></textarea>
@@ -431,32 +434,10 @@
 <script defer src="libs/prism-yaml.min.js"></script>
 <script defer src="libs/prism-go.min.js"></script>
 <script defer src="libs/prism-rust.min.js"></script>
-<script>
-    // 本地 libs/ 里没有 Prism 时，自动回退到 CDN；两边都没有则保持纯文本代码块
-    window.addEventListener('load', function () {
-        if (window.Prism) return;
-        var base = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/';
-        var list = [
-            'prism.min.js', 'components/prism-python.min.js', 'components/prism-typescript.min.js',
-            'components/prism-json.min.js', 'components/prism-bash.min.js', 'components/prism-sql.min.js',
-            'components/prism-yaml.min.js', 'components/prism-go.min.js', 'components/prism-rust.min.js'
-        ];
-        var i = 0;
-        (function step() {
-            if (i >= list.length) { if (!isGenerating) renderChat(); return; }
-            var sc = document.createElement('script');
-            sc.src = base + list[i];
-            i++;
-            sc.onload = step;
-            sc.onerror = step;
-            document.head.appendChild(sc);
-        })();
-    });
-</script>
 <!-- 拆分后的脚本：顺序不能变 -->
-    <script src="js/01-core.js?v18"></script>
-    <script src="js/02-features.js?v18"></script>
-    <script src="js/03-chat.js?v18"></script>
-    <script src="js/04-moments.js?v18"></script>
+    <script src="js/01-core.js?v21"></script>
+    <script src="js/02-features.js?v21"></script>
+    <script src="js/03-chat.js?v21"></script>
+    <script src="js/04-moments.js?v21"></script>
 </body>
 </html>
