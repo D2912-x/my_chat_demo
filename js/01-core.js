@@ -148,6 +148,8 @@
     }
 
     function fillUiSettings() {
+        const _rs = document.getElementById('replyStyleSel');
+        if (_rs) _rs.value = localStorage.getItem('chat.replyStyle') || 'split';
         document.getElementById('uiAvatarOn').checked = localStorage.getItem('chat.avatar.on') !== '0';
         document.getElementById('uiAnimOn').checked = localStorage.getItem('chat.anim.on') !== '0';
         document.getElementById('avMeText').value = avGet('chat.avatar.meText');
@@ -162,6 +164,8 @@
     }
 
     function saveUiSettings() {
+        const _rsEl = document.getElementById('replyStyleSel');
+        if (_rsEl) localStorage.setItem('chat.replyStyle', _rsEl.value || 'split');
         localStorage.setItem('chat.avatar.on', document.getElementById('uiAvatarOn').checked ? '1' : '0');
         localStorage.setItem('chat.anim.on', document.getElementById('uiAnimOn').checked ? '1' : '0');
         localStorage.setItem('chat.avatar.meText', String(document.getElementById('avMeText').value || '').trim().slice(0, 2));

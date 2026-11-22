@@ -644,6 +644,7 @@
             }
             if (m.ts) prevTs = m.ts;
         });
+        autoFoldAll();
     }
 
     // 【J16】Markdown 渲染
@@ -858,6 +859,47 @@
             box.appendChild(a);
         });
         container.appendChild(box);
+    }
+
+    // ===== 长消息折叠（用户与 AI 都适用） =====
+    const FOLD_CHARS = 220;
+    const FOLD_LINES = 9;
+
+    function shouldFold(text) {
+        const s = String(text || '');
+        if (s.length > FOLD_CHARS) return true;
+        return (s.match(/\n/g) || []).length >= FOLD_LINES;
+    }
+
+    function applyFold(wrap, el, text) {
+        if (!shouldFold(text)) return;
+        if (wrap.querySelector('.fold-btn')) return;
+        el.classList.add('folded');
+        wrap.classList.add('has-fold');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fold-btn';
+        btn.textContent = '展开全文';
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const folded = el.classList.toggle('folded');
+            btn.textContent = folded ? '展开全文' : '收起';
+        });
+        wrap.appendChild(btn);
+    }
+
+    // 渲染完后统一扫一遍：没折过的长消息折起来
+    function autoFoldAll() {
+        const msgsEl = document.getElementById('msgs');
+        if (!msgsEl) return;
+        msgsEl.querySelectorAll('.msg-wrap').forEach(function (wrap) {
+            if (wrap.dataset.foldChecked) return;
+            wrap.dataset.foldChecked = '1';
+            const el = wrap.querySelector('.msg');
+            if (!el) return;
+            const txt = el.innerText || el.textContent || '';
+            applyFold(wrap, el, txt);
+        });
     }
 
     function addBubble(cls, content, displayText, imageBase64, index, role, fileName, reasoning, ts, grouped, searchSources) {
@@ -1372,6 +1414,7 @@
 
             if (full) {
                 paintSegments();
+                setTimeout(autoFoldAll, 30);
                 if (searchMeta && searchMeta.sources && searchMeta.sources.length) {
                     appendSearchSources(d, searchMeta.sources);
                 }

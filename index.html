@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>My Chat</title>
-    <link rel="stylesheet" href="style.css?v21">
+    <link rel="stylesheet" href="style.css?v23">
 </head>
 <body>
 
@@ -136,6 +136,14 @@
         <div class="mem-actions" style="margin-top:10px;">
             <button type="button" class="mem-btn" onclick="resetUiColors()">恢复默认颜色</button>
         </div>
+
+        <label>回复形式</label>
+        <select id="replyStyleSel" onchange="saveUiSettings()">
+            <option value="split">几条短消息（像微信连发）</option>
+            <option value="short">一两句话（不拆）</option>
+            <option value="para">一段话（连贯，不拆）</option>
+        </select>
+        <div style="font-size:12px; color:#aaa; margin-top:4px;">「几条短消息」会用多条气泡；另外两种合成一个气泡。</div>
 
         <label class="switch-row" style="margin-top:16px;"><input type="checkbox" id="uiAnimOn" onchange="saveUiSettings()"> 消息上滑动画</label>
 
@@ -435,9 +443,9 @@
 <script defer src="libs/prism-go.min.js"></script>
 <script defer src="libs/prism-rust.min.js"></script>
 <!-- 拆分后的脚本：顺序不能变 -->
-    <script src="js/01-core.js?v21"></script>
-    <script src="js/02-features.js?v21"></script>
-    <script src="js/03-chat.js?v21"></script>
-    <script src="js/04-moments.js?v21"></script>
+    <script src="js/01-core.js?v23"></script>
+    <script src="js/02-features.js?v23"></script>
+    <script src="js/03-chat.js?v23"></script>
+    <script src="js/04-moments.js?v23"></script>
 </body>
 </html>
